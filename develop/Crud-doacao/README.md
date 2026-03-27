@@ -1,4 +1,4 @@
-## Nova funcionalidade! em desenvolvimento
+## Nova funcionalidade! (em desenvolvimento)
 
 Aqui estará onde os novos Front-end, Back-end e Banco de Dados estarão, assim como descrição de novas versões, funcionalidades etc.
 
