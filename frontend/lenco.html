@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Instituto Luz de Lô</title>
+
+    <link rel="stylesheet" href="lenco.css">
+    <link rel="shortcut icon" href="img/Favicon.png" type="image/x-icon">
+</head>
+
+<body>
+    <header>
+        <div class="left-content">
+            <img src="img/logo3.png" alt="logo" height="110px" width="110px" />
+            <h1 class="cabecalho">Instituto Luz de Lô</h1>
+        </div>
+
+        <div class="redesocial right-content">
+            <a href="https://www.instagram.com/institutoluzdelo?igsh=cDZqeW10c3pubTZh">
+                <img src="img/instagram.png" alt="logo do instagram">
+                <p>Acesse: @institutoluzdelo</p>
+            </a>
+        </div>
+    </header>
+
+    <div class="container">
+        <h2>Cadastro de Tratamento/Presente</h2>
+        <form id="mainForm" action="https://formsubmit.co/projetolusdelo@gmail.com" method="POST">
+            <input type="hidden" name="_captcha" value="false"> <input type="hidden" name="_next" value="https://moiseskennedy.github.io/instituto-luz-de-lo/lenco.html"> <div class="form-group">
+                <label for="nomePrincipal">Seu Nome:</label>
+                <input type="text" id="nomePrincipal" name="nomePrincipal" placeholder="Seu nome completo" required>
+                <small class="error-message"></small>
+            </div>
+
+            <div class="form-group">
+                <label for="celularPrincipal">Seu Celular:</label>
+                <input type="text" id="celularPrincipal" name="celularPrincipal" placeholder="(99) 99999-9999" required>
+                <small class="error-message"></small>
+            </div>
+
+            <div class="form-group">
+                <label for="cep">CEP:</label>
+                <input type="text" id="cep" name="cep" placeholder="99999-999" required maxlength="9">
+                <small class="error-message"></small>
+            </div>
+
+            <div class="form-group">
+                <label for="rua">Rua:</label>
+                <input type="text" id="rua" name="rua" readonly>
+            </div>
+
+            <div class="form-group">
+                <label for="bairro">Bairro:</label>
+                <input type="text" id="bairro" name="bairro" readonly>
+            </div>
+
+            <div class="form-group">
+                <label for="estado">Estado:</label>
+                <input type="text" id="estado" name="estado" readonly>
+            </div>
+
+            <div class="form-group">
+                <label>Você está em tratamento ou deseja presentear?</label>
+                <div class="radio-group">
+                    <input type="radio" id="opcaoTratamento" name="tipoAcao" value="Estou em tratamento" checked>
+                    <label for="opcaoTratamento">Estou em tratamento</label>
+                </div>
+                <div class="radio-group">
+                    <input type="radio" id="opcaoPresentear" name="tipoAcao" value="Desejo presentear alguem em tratamento">
+                    <label for="opcaoPresentear">Desejo presentear alguém em tratamento</label>
+                </div>
+                <div class="radio-group">
+                    <input type="radio" id="opcaoAmbas" name="tipoAcao" value="Ambas as opcoes">
+                    <label for="opcaoAmbas">Ambas as opções</label>
+                </div>
+            </div>
+
+            <div id="presenteadosSection" style="display: none;">
+                <h3>Pessoas a Presentear:</h3>
+                <div id="presenteadosContainer">
+                    </div>
+                <button type="button" id="addPresenteadoBtn" class="add-button">Desejo presentear mais uma pessoa</button>
+            </div>
+
+            <button type="submit">Enviar</button>
+            <br>
+        </form>
+    </div>
+
+    <a href="index.html" class="btn-flutuante-principal" title="Voltar à Página Principal">Home 🏠</a>
+
+    <footer>
+        <div class="div1footer">
+            <h2 class="T1footer">
+                Se você deseja se tornar uma luz na vida de alguém, se voluntarie ou doe!
+                Pois assim podemos distribuir amor, respeito e carinho para todas essas mulheres 🦋
+            </h2>
+        </div>
+        <br>
+        <h3 class="T2footer">Apoiadores</h3>
+        <div class="carrosselPai">
+            <div class="carrosselFilho">
+                <div class="track">
+                    <a href="https://g.co/kgs/4YcZxsP">
+                        <img src="img/C&A.png" alt="C&A" class="img_apoiadores">
+                    </a>
+
+                    <a href="https:www.instagram.com/usemoreana?igsh=MXh3b2szOGJpejZpcA==">
+                        <img src="img/Moreana.jpg" alt="Moreana" class="img_apoiadores">
+                    </a>
+
+                    <a href="https://www.instagram.com/af_transfers?igsh=aGhIb3IqbmF2dnhj">
+                        <img src="img/transfers.jpg" alt="transfers" class="img_apoiadores">
+                    </a>
+
+                    <a href="https://www.cvlopes.com.br/">
+                        <img src="img\cv.lopes.jpg" alt="CV.lopes">
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <ul class="liFooter">
+            <li><strong>E-mail: </strong><a href="mailton:projetolusdelo@gmail.com">projetolusdelo@gmail.com</a></li>
+            <li><strong>Endereço: </strong><a href="https://maps.app.goo.gl/yhuffCeMJuVYz6fo8">Rua Couto Magalhães 2109
+                    (centro) - Franca, SP</a></li>
+            <li><strong>CEP: </strong>14400-020</li>
+        </ul>
+    </footer>
+
+    <script src="lenco.js"></script>
+</body>
+
+</html>
