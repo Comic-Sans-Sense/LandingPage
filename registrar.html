@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registrar Gastos</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    
+<div class="container">
+
+  <aside class="sidebar">
+    <div>
+      <div class="logo">Luz de Ló</div>
+
+      <div class="menu">
+        <a href="notificacoes.html">Notificações
+
+        <button onclick="gerarDoacaoMock()" class="btn btn-cyan" style="margin-top:10px;">
+          Gerar Doação Mock
+        </button></a>
+        <a href="historico.html">Histórico</a>
+        <a href="rejeitados.html">Rejeitados</a>
+        <a class="active" href="#">Registrar Gastos</a>
+      </div>
+    </div>
+
+    <p>Painel de Gestão</p>
+  </aside>
+
+  <main class="main">
+
+    <div class="topbar">
+      <h1>Registrar Gastos</h1>
+      <div class="saldo">Saldo atual: R$ 0,00</div>
+    </div>
+
+    <div class="card">
+
+      <label>Quanto foi gasto:</label>
+      <input id="valor" type="number" placeholder="R$ 0,00">
+
+      <label>Descrição:</label>
+      <textarea id="descricao" placeholder="Descreva o gasto..."></textarea>
+
+      <div class="filters">
+        <button type="button" class="filter-btn active">Marmitas</button>
+        <button type="button" class="filter-btn">Tecidos</button>
+        <button type="button" class="filter-btn">Outros</button>
+      </div>
+
+      <div class="upload" onclick="document.getElementById('file-input').click()" style="cursor: pointer;">
+  Clique para selecionar o comprovante
+  <input type="file" id="file-input" accept="image/*" style="display: none;" onchange="this.parentElement.innerText = this.files[0].name">
+</div>
+
+      <button onclick="registrarGasto()" class="btn btn-cyan" style="width:100%">
+        Registrar
+      </button>
+
+    </div>
+
+  </main>
+
+</div>
+
+<script src="script.js"></script>
+
+
+</body>
+</html>

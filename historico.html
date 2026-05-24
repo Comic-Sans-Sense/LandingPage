@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Histórico</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div class="container">
+
+  <aside class="sidebar">
+    <div>
+      <div class="logo">Luz de Ló</div>
+
+      <div class="menu">
+        <a href="notificacoes.html">Notificações</a>
+        <a class="active" href="#">Histórico</a>
+        <a href="rejeitados.html">Rejeitados</a>
+        <a href="registrar.html">Registrar Gastos</a>
+      </div>
+    </div>
+
+    <p>Painel de Gestão</p>
+  </aside>
+
+  <main class="main">
+
+    <div class="topbar">
+      <h1>Histórico</h1>
+      <div class="saldo">Saldo atual: R$ 0,00</div>
+    </div>
+
+    <div class="filters">
+  <button onclick="filtrarHistorico('Todos')" class="filter-btn active">Todos</button>
+  <button onclick="filtrarHistorico('Doação')" class="filter-btn">Doações</button> <button onclick="filtrarHistorico('Marmitas')" class="filter-btn">Marmitas</button>
+  <button onclick="filtrarHistorico('Tecidos')" class="filter-btn">Tecidos</button>
+  <button onclick="filtrarHistorico('Outros')" class="filter-btn">Outros</button>
+</div>
+
+    <div id="lista-historico"></div>
+
+  </main>
+
+</div>
+<script src="script.js"></script>
+
+</body>
+</html>
