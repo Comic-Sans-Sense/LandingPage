@@ -245,6 +245,72 @@ textarea {
 }
 
 @media(max-width: 900px) {
+  /* Layout adaptado para o Histórico em duas colunas */
+.card-gasto {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 25px;
+}
+
+.gasto-info {
+  flex: 1;
+}
+
+/* Coluna da Direita (Status e Comprovante) */
+.gasto-retorno {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+  text-align: right;
+  min-width: 200px;
+}
+
+/* Painelzinho da Data de Aprovação/Rejeição */
+.status-timeline {
+  display: flex;
+  flex-direction: column;
+  background: #fdfdfd;
+  padding: 8px 14px;
+  border-radius: 12px;
+  border: 1px dashed #ddd;
+}
+
+.status-label {
+  font-weight: bold;
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #888;
+  margin-bottom: 2px;
+}
+
+.status-data {
+  font-size: 13px;
+  color: #333;
+}
+
+/* Botão de Ver Comprovante estilizado com a cor padrão da FATEC do Luz de Lô */
+.btn-comprovante {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: #f0fdfa;
+  color: #44d1c7;
+  border: 1px solid #44d1c7;
+  text-decoration: none;
+  border-radius: 10px;
+  font-weight: bold;
+  font-size: 13px;
+  transition: 0.3s;
+}
+
+.btn-comprovante:hover {
+  background: #44d1c7;
+  color: white;
+}
+
   .sidebar {
     width: 90px;
   }
@@ -265,4 +331,216 @@ textarea {
   .login-right {
     width: 100%;
   }
+}
+
+@media(max-width: 900px) {
+  /* Adicionar isso dentro da media query mobile do seu style.css */
+  .card-gasto {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .gasto-retorno {
+    width: 100%;
+    align-items: flex-start;
+    text-align: left;
+    border-top: 1px dashed #eee;
+    padding-top: 15px;
+  }
+
+  .status-timeline, .gasto-comprovante, .btn-comprovante {
+    width: 100%;
+  }
+
+  .btn-comprovante {
+    justify-content: center;
+    padding: 11px;
+  }
+
+  /* Transforma o layout em coluna (Menu topo, conteúdo baixo) */
+  .container {
+    flex-direction: column;
+  }
+
+  /* Sidebar vira uma barra fixa no topo */
+  .sidebar {
+    width: 100%;
+    min-height: auto;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-right: none;
+    border-bottom: 1px solid #ddd;
+    position: relative;
+    z-index: 999;
+  }
+
+  .logo {
+    margin-bottom: 0;
+    font-size: 24px;
+  }
+
+  /* Esconde o checkbox real */
+  .menu-checkbox {
+    display: none;
+  }
+
+  /* Estilização do Botão Hambúrguer (Os 3 risquinhos) */
+  .hamburger {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+    cursor: pointer;
+    padding: 5px;
+  }
+
+  .hamburger span {
+    display: block;
+    width: 28px;
+    height: 3px;
+    background-color: #333;
+    border-radius: 3px;
+    transition: 0.3s;
+  }
+
+  /* Estilo do Menu escondido (Vai aparecer como uma cortina) */
+  .menu {
+    display: none; /* Escondido por padrão */
+    flex-direction: column;
+    position: absolute;
+    top: 100%; /* Senta logo abaixo da barra do topo */
+    left: 0;
+    width: 100%;
+    background: white;
+    padding: 20px;
+    border-bottom: 1px solid #ddd;
+    box-shadow: 0 10px 15px rgba(0,0,0,0.05);
+    gap: 10px;
+  }
+
+  .menu a {
+    width: 100%;
+    text-align: left;
+    padding: 12px 20px;
+  }
+
+  /* A MÁGICA: Quando o checkbox estiver marcado, mostra o menu */
+  .menu-checkbox:checked ~ .menu {
+    display: flex;
+  }
+
+  /* EFEITO VISUAL: Transforma os 3 risquinhos em um "X" quando aberto */
+  .menu-checkbox:checked ~ .hamburger span:nth-child(1) {
+    transform: translateY(8px) rotate(45deg);
+  }
+  .menu-checkbox:checked ~ .hamburger span:nth-child(2) {
+    opacity: 0;
+  }
+  .menu-checkbox:checked ~ .hamburger span:nth-child(3) {
+    transform: translateY(-8px) rotate(-45deg);
+  }
+
+  /* Ajustes extras de espaçamento no mobile */
+  .main {
+    padding: 20px;
+  }
+
+  .topbar {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 15px;
+  }
+
+  .topbar h1 {
+    font-size: 28px;
+  }
+
+  .actions, .filters {
+    flex-wrap: wrap;
+  }
+
+  .login-left {
+    display: none;
+  }
+
+  .login-right {
+    width: 100%;
+    padding: 20px;
+  }
+}
+
+/* Garante que o botão hamburguer fique invisível no PC */
+@media(min-width: 901px) {
+  .hamburger, .menu-checkbox {
+    display: none;
+  }
+}
+
+/* Horário de aprovação e comprovante*/
+
+.card-gasto {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 25px;
+}
+
+.gasto-info {
+  flex: 1;
+}
+
+/* Bloco da Direita: Organiza as informações verticalmente alinhadas à direita */
+.gasto-retorno {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 12px;
+  text-align: right;
+  min-width: 200px;
+}
+
+/* Caixinha sutil que exibe a Data de Aprovação/Rejeição */
+.status-timeline {
+  display: flex;
+  flex-direction: column;
+  background: #fdfdfd;
+  padding: 8px 14px;
+  border-radius: 12px;
+  border: 1px dashed #ddd;
+}
+
+.status-label {
+  font-weight: bold;
+  font-size: 11px;
+  text-transform: uppercase;
+  color: #888;
+  margin-bottom: 2px;
+}
+
+.status-data {
+  font-size: 13px;
+  color: #333;
+}
+
+/* Botão elegante do Comprovante */
+.btn-comprovante {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 14px;
+  background: #f0fdfa;
+  color: #44d1c7;
+  border: 1px solid #44d1c7;
+  text-decoration: none;
+  border-radius: 10px;
+  font-weight: bold;
+  font-size: 13px;
+  transition: 0.3s;
+}
+
+.btn-comprovante:hover {
+  background: #44d1c7;
+  color: white;
 }
