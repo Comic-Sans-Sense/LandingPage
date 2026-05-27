@@ -1,0 +1,217 @@
+.donation-wrapper {
+    background-color: #f1f8f9;
+    min-height: 100vh;
+    padding-top: 100px;
+    padding-bottom: 60px;
+}
+
+.donation-container {
+    max-width: 650px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.subtitle-donation {
+    color: var(--text-light);
+    margin-bottom: 30px;
+}
+
+.donation-box {
+    background: var(--white);
+    border-radius: 16px;
+    padding: 40px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+    margin-bottom: 30px;
+}
+
+.section-label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 15px;
+    color: var(--text-dark);
+}
+
+/* Grid de Valores Predefinidos */
+.values-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 12px;
+    margin-bottom: 25px;
+}
+
+.val-btn {
+    background: var(--white);
+    border: 1px solid #ddd;
+    padding: 15px 5px;
+    font-size: 1.1rem;
+    font-weight: 600;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.val-btn:hover {
+    border-color: var(--primary);
+    background-color: #f9f9f9;
+}
+
+.val-btn.active {
+    background-color: var(--primary);
+    color: var(--white);
+    border-color: var(--primary);
+}
+
+/* Input Customizado */
+.custom-value-wrapper {
+    margin-bottom: 30px;
+}
+
+.custom-value-wrapper label {
+    display: block;
+    font-size: 0.95rem;
+    margin-bottom: 8px;
+    color: var(--text-light);
+}
+
+.custom-value-wrapper input {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1.1rem;
+}
+
+/* Área da Chave Pix */
+.pix-key-box {
+    background-color: #e6f6f7;
+    padding: 20px;
+    border-radius: 12px;
+    margin-bottom: 30px;
+}
+
+.pix-key-box label {
+    font-size: 0.85rem;
+    color: var(--text-light);
+    display: block;
+    margin-bottom: 8px;
+}
+
+.input-copy-group {
+    display: flex;
+    gap: 10px;
+}
+
+.input-copy-group input {
+    flex: 1;
+    padding: 12px;
+    border: 1px solid #bce2e5;
+    border-radius: 6px;
+    font-size: 1rem;
+    background: var(--white);
+    color: var(--text-dark);
+}
+
+#copy-btn {
+    background: var(--primary);
+    color: var(--white);
+    border: none;
+    padding: 0 15px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 1.2rem;
+    transition: var(--transition);
+}
+
+#copy-btn:hover { background: var(--primary-dark); }
+
+.current-value-display {
+    margin-top: 15px;
+    font-weight: bold;
+    font-size: 1.1rem;
+    color: var(--text-dark);
+}
+
+/* Área de Dropzone do arquivo */
+.dropzone {
+    border: 2px dashed #bce2e5;
+    background: #fbfdfd;
+    border-radius: 10px;
+    padding: 30px;
+    text-align: center;
+    cursor: pointer;
+    transition: var(--transition);
+    margin-bottom: 25px;
+}
+
+.dropzone:hover {
+    background: #e6f6f7;
+    border-color: var(--primary);
+}
+
+.dropzone i {
+    font-size: 2.5rem;
+    color: var(--primary);
+    margin-bottom: 10px;
+}
+
+#file-name-preview {
+    display: block;
+    margin-top: 10px;
+    font-size: 0.9rem;
+    color: var(--primary-dark);
+    font-weight: 500;
+}
+
+/* Botão Enviar */
+.btn-submit-donation {
+    width: 100%;
+    background: var(--primary);
+    color: var(--white);
+    border: none;
+    padding: 15px;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: var(--transition);
+}
+
+.btn-submit-donation:hover { background: var(--primary-dark); }
+
+/* Caixa Agradecimento */
+.thanks-box {
+    background: var(--white);
+    padding: 30px;
+    border-radius: 12px;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.01);
+}
+
+.thanks-box h3 { margin-bottom: 15px; }
+.thanks-box p { font-size: 0.95rem; color: var(--text-light); margin-bottom: 10px; line-height: 1.5; }
+
+@media (max-width: 480px) {
+    .values-grid { grid-template-columns: repeat(2, 1fr); }
+    .donation-box { padding: 20px; }
+}
+
+/* Estilização do link do Instagram no Footer */
+.footer-instagram {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #bbb; /* Cor padrão que combina com o restante do texto do footer */
+    text-decoration: none;
+    font-size: 0.95rem;
+    margin-top: 15px; /* Margem para distanciar do parágrafo de cima */
+    transition: var(--transition);
+}
+
+.footer-instagram i {
+    font-size: 1.2rem;
+    color: var(--primary); /* Mantém o ícone na cor azul turquesa do projeto */
+}
+
+.footer-instagram:hover {
+    color: var(--primary); /* O texto inteiro fica azul turquesa no hover */
+    transform: translateX(3px); /* Um leve efeito de deslocamento lateral */
+}

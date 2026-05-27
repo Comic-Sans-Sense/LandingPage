@@ -1,0 +1,255 @@
+.volunteer-wrapper {
+    background-color: #f1f8f9;
+    min-height: 100vh;
+    padding-top: 110px;
+    padding-bottom: 60px;
+}
+
+.volunteer-container {
+    max-width: 750px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+.subtitle-volunteer {
+    color: var(--text-light);
+    margin-bottom: 40px;
+}
+
+.form-card {
+    background: var(--white);
+    border-radius: 16px;
+    padding: 40px;
+    box-shadow: 0 10px 30px rgba(0,0,0,0.04);
+}
+
+.form-section {
+    border-bottom: 1px solid #edf2f2;
+    padding-bottom: 30px;
+    margin-bottom: 30px;
+}
+
+.form-section:last-of-type {
+    border-bottom: none;
+    padding-bottom: 0;
+    margin-bottom: 25px;
+}
+
+.form-section h3 {
+    font-size: 1.3rem;
+    color: var(--text-dark);
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.form-section h3 i {
+    color: var(--primary);
+}
+
+.section-desc-internal {
+    font-size: 0.95rem;
+    color: var(--text-light);
+    margin-bottom: 15px;
+}
+
+/* Campos de Entrada */
+.input-group {
+    margin-bottom: 20px;
+    display: flex;
+    flex-direction: column;
+}
+
+.input-group label {
+    font-weight: 600;
+    font-size: 0.9rem;
+    margin-bottom: 8px;
+    color: var(--text-dark);
+}
+
+.input-group input[type="text"],
+.input-group input[type="email"],
+.input-group input[type="tel"],
+.input-group select,
+.input-group textarea {
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    font-size: 1rem;
+    transition: var(--transition);
+    background-color: #fafbfc;
+}
+
+.input-group input:focus,
+.input-group select:focus,
+.input-group textarea:focus {
+    border-color: var(--primary);
+    background-color: var(--white);
+    outline: none;
+    box-shadow: 0 0 0 3px rgba(34, 178, 194, 0.1);
+}
+
+/* Grids Internos do Form */
+.grid-form-2 {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 20px;
+}
+
+/* Componente de Radios */
+.radio-group {
+    display: flex;
+    gap: 20px;
+    padding: 12px 0;
+}
+
+.radio-group label {
+    font-weight: normal;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+/* Componente de Seleção de Turnos (Estilo Botões Modernos) */
+.opcoes-turno {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.btn-turno {
+    flex: 1;
+    background: #fafbfc;
+    border: 1px solid #ddd;
+    padding: 12px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: var(--transition);
+    text-align: center;
+}
+
+.btn-turno:hover {
+    border-color: var(--primary);
+    background-color: #f1f8f9;
+}
+
+.btn-turno.active {
+    background-color: var(--primary);
+    color: var(--white);
+    border-color: var(--primary);
+}
+
+/* Cláusulas e Checkboxes */
+.clausulas-container {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.checkbox-item {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+}
+
+.checkbox-item input[type="checkbox"] {
+    margin-top: 4px;
+    transform: scale(1.1);
+    cursor: pointer;
+}
+
+.checkbox-item label {
+    font-size: 0.9rem;
+    color: var(--text-light);
+    line-height: 1.4;
+    cursor: pointer;
+}
+
+/* Mensagens de Erro */
+.error-msg {
+    color: #dc3545;
+    font-size: 0.8rem;
+    margin-top: 5px;
+    font-weight: 500;
+}
+
+/* Botão Enviar Form */
+.btn-submit-volunteer {
+    width: 100%;
+    background: var(--primary);
+    color: var(--white);
+    border: none;
+    padding: 15px;
+    border-radius: 8px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: var(--transition);
+    margin-top: 10px;
+}
+
+.btn-submit-volunteer:hover {
+    background: var(--primary-dark);
+    transform: translateY(-1px);
+}
+
+/* Ajustes de Responsividade */
+@media (max-width: 600px) {
+    .grid-form-2 {
+        grid-template-columns: 1fr;
+        gap: 0;
+    }
+    .opcoes-turno {
+        flex-direction: column;
+    }
+    .form-card {
+        padding: 20px;
+    }
+}
+
+/* Forçar a exibição do menu mobile quando estiver ativo */
+@media screen and (max-width: 768px) {
+    .nav-menu.active {
+        display: flex !important; /* Ou block, dependendo do seu layout original */
+        opacity: 1 !important;
+        visibility: visible !important;
+        
+        /* Caso seu menu seja do tipo que surge do topo ou da lateral, 
+           garanta que ele mude a posição: */
+        transform: translateY(0) !important; 
+        right: 0 !important; 
+    }
+
+    .navbar {
+        z-index: 9999 !important; /* Garante que a barra fique no topo de tudo */
+    }
+    .nav-menu {
+        z-index: 9998 !important; /* Garante que as opções fiquem acima do formulário */
+    }
+}
+
+/* Estilização do link do Instagram no Footer */
+.footer-instagram {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    color: #bbb; /* Cor padrão que combina com o restante do texto do footer */
+    text-decoration: none;
+    font-size: 0.95rem;
+    margin-top: 15px; /* Margem para distanciar do parágrafo de cima */
+    transition: var(--transition);
+}
+
+.footer-instagram i {
+    font-size: 1.2rem;
+    color: var(--primary); /* Mantém o ícone na cor azul turquesa do projeto */
+}
+
+.footer-instagram:hover {
+    color: var(--primary); /* O texto inteiro fica azul turquesa no hover */
+    transform: translateX(3px); /* Um leve efeito de deslocamento lateral */
+}

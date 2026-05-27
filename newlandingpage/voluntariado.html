@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Seja um Voluntário - Instituto Luz de Lô</title>
+    <link rel="stylesheet" href="principal.css">
+    <link rel="stylesheet" href="voluntariado.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <header class="navbar">
+        <div class="nav-container">
+            <a href="principal.html" class="logo">Instituto Luz de Lô</a>
+            <button class="menu-toggle" id="mobile-menu" aria-label="Abrir menu">
+                <span class="bar"></span>
+                <span class="bar"></span>
+                <span class="bar"></span>
+            </button>
+            <nav class="nav-menu">
+                <a href="principal.html" class="nav-link">Início</a>
+                <a href="voluntariado.html" class="nav-link active">Voluntariado</a>
+                <a href="doacoes.html" class="btn-nav">Quero Ajudar</a>
+            </nav>
+        </div>
+    </header>
+
+    <main class="volunteer-wrapper">
+        <div class="volunteer-container">
+            <div class="text-center">
+                <h2>Torne-se um Voluntário</h2>
+                <p class="subtitle-volunteer">Junte-se a nós e transforme sua energia em impacto social positivo</p>
+            </div>
+
+            <div class="form-card">
+                <form id="cadastroForm" action="https://formsubmit.co/moiseskennedy2005@gmail.com" method="POST">
+                    <input type="hidden" name="_captcha" value="false">
+                    
+                    <div class="form-section">
+                        <h3><i class="fa-solid fa-user"></i> Dados Pessoais</h3>
+                        
+                        <div class="input-group">
+                            <label for="nome">Nome Completo *</label>
+                            <input type="text" id="nome" name="Nome" required placeholder="Digite seu nome completo">
+                            <span class="error-msg" id="nomeError"></span>
+                        </div>
+
+                        <div class="grid-form-2">
+                            <div class="input-group">
+                                <label>Nacionalidade *</label>
+                                <div class="radio-group">
+                                    <label><input type="radio" name="Nacionalidade" value="Brasileiro" checked> Brasileiro</label>
+                                    <label><input type="radio" name="Nacionalidade" value="Estrangeiro"> Estrangeiro</label>
+                                </div>
+                            </div>
+                            <div class="input-group">
+                                <input type="text" id="nacionalidadeOutra" name="Nacionalidade_Outra" placeholder="Qual sua nacionalidade?" style="display: none; margin-top: 28px;">
+                                <span class="error-msg" id="nacionalidadeOutraError"></span>
+                            </div>
+                        </div>
+
+                        <div class="grid-form-2">
+                            <div class="input-group">
+                                <label for="rg">RG *</label>
+                                <input type="text" id="rg" name="RG" required placeholder="00.000.000-0">
+                                <span class="error-msg" id="rgError"></span>
+                            </div>
+                            <div class="input-group">
+                                <label for="cpf">CPF *</label>
+                                <input type="text" id="cpf" name="CPF" required placeholder="000.000.000-00">
+                                <span class="error-msg" id="cpfError"></span>
+                            </div>
+                        </div>
+
+                        <div class="grid-form-2">
+                            <div class="input-group">
+                                <label for="estadoCivil">Estado Civil *</label>
+                                <select id="estadoCivil" name="Estado_Civil" required>
+                                    <option value="" disabled selected>Selecione...</option>
+                                    <option value="Solteiro">Solteiro(a)</option>
+                                    <option value="Casado">Casado(a)</option>
+                                    <option value="Divorciado">Divorciado(a)</option>
+                                    <option value="Viúvo">Viúvo(a)</option>
+                                </select>
+                                <span class="error-msg" id="estadoCivilError"></span>
+                            </div>
+                            <div class="input-group">
+                                <label for="profissao">Profissão *</label>
+                                <input type="text" id="profissao" name="Profissão" required placeholder="Sua profissão atual">
+                                <span class="error-msg" id="profissaoError"></span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3><i class="fa-solid fa-address-book"></i> Contato e Endereço</h3>
+                        
+                        <div class="grid-form-2">
+                            <div class="input-group">
+                                <label for="telefone">Telefone / WhatsApp *</label>
+                                <input type="tel" id="telefone" name="Telefone" required placeholder="(16) 99999-9999">
+                                <span class="error-msg" id="telefoneError"></span>
+                            </div>
+                            <div class="input-group">
+                                <label for="email">E-mail *</label>
+                                <input type="email" id="email" name="Email" required placeholder="seuemail@exemplo.com">
+                                <span class="error-msg" id="emailError"></span>
+                            </div>
+                        </div>
+
+                        <div class="input-group">
+                            <label for="endereco">Endereço Residencial *</label>
+                            <input type="text" id="endereco" name="Endereço" required placeholder="Rua, Número, Bairro">
+                            <span class="error-msg" id="enderecoError"></span>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3><i class="fa-solid fa-calendar-days"></i> Disponibilidade</h3>
+                        <p class="section-desc-internal">Selecione os turnos de sua preferência para atuar no Instituto:</p>
+                        
+                        <div class="opcoes-turno">
+                            <button type="button" class="btn-turno" data-turno="Manhã">Manhã</button>
+                            <button type="button" class="btn-turno" data-turno="Tarde">Tarde</button>
+                            <button type="button" class="btn-turno" data-turno="Noite">Noite</button>
+                            <input type="hidden" id="turnoSelecionado" name="Turno_Preferencia" required>
+                        </div>
+                        <span class="error-msg text-center" id="turnoError" style="display:block; margin-bottom:15px;"></span>
+
+                        <div class="input-group">
+                            <label for="obs">Observações ou Habilidades Especiais (Opcional)</label>
+                            <textarea id="obs" name="Observacoes" rows="4" placeholder="Conte-nos um pouco sobre como gostaria de ajudar (ex: costura, cozinha, organização...)"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3><i class="fa-solid fa-file-contract"></i> Termo de Adesão</h3>
+                        <p class="section-desc-internal">Para concluir sua inscrição, leia e concorde com as cláusulas abaixo:</p>
+                        
+                        <div class="clausulas-container">
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="clausula-1" name="clausula-1" required>
+                                <label for="clausula-1">Confirmo que as informações prestadas são verdadeiras e aceito atuar de forma voluntária, conforme a Lei nº 9.608/98.</label>
+                            </div>
+                            <div class="checkbox-item">
+                                <input type="checkbox" id="clausula-2" name="clausula-2" required>
+                                <label for="clausula-2">Autorizo o uso de minha imagem em materiais de divulgação institucionais sem fins lucrativos.</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <button type="submit" class="btn-submit-volunteer">Enviar Cadastro</button>
+                </form>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container grid-footer">
+            <div class="footer-brand">
+                <h3>Instituto Luz de Lô</h3>
+                <p>Se você deseja se tornar uma luz na vida de alguém, se voluntarie ou doe! Pois assim podemos distribuir amor, respeito e carinho para todos.</p>
+                <a href="https://www.instagram.com/institutoluzdelo" target="_blank" class="footer-instagram">
+                <i class="fa-brands fa-instagram"></i> @institutoluzdelo</a>
+            </div>
+            <div class="footer-contact">
+                <h4>Contato</h4>
+                <p><i class="fa-solid fa-envelope"></i> projetoluzdelo@gmail.com</p>
+                <p><i class="fa-solid fa-location-dot"></i> Rua Couto Magalhães, 2109 (Centro) - Franca, SP</p>
+                <p>CEP: 14400-020</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <p>&copy; 2026 Instituto Luz de Lô. Todos os direitos reservados.</p>
+        </div>
+    </footer>
+    
+    <script src="principal.js"></script>
+    <script src="voluntariado.js"></script>
+    
+    <script>
+        // Sincroniza a animação visual do botão hambúrguer nesta página
+        (function() {
+            const mobileMenu = document.getElementById('mobile-menu');
+            const navMenu = document.querySelector('.nav-menu');
+
+            if (mobileMenu && navMenu) {
+                mobileMenu.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    
+                    // Alterna as classes corretas que o principal.css e principal.js esperam
+                    this.classList.toggle('is-active');
+                    navMenu.classList.toggle('active');
+                    
+                    // Aplica exatamente a mesma animação de rotação nas barras
+                    const bars = this.querySelectorAll('.bar');
+                    if (this.classList.contains('is-active')) {
+                        bars[0].style.transform = 'rotate(-45deg) translate(-5px, 6px)';
+                        bars[1].style.opacity = '0';
+                        bars[2].style.transform = 'rotate(45deg) translate(-5px, -6px)';
+                    } else {
+                        bars[0].style.transform = 'none';
+                        bars[1].style.opacity = '1';
+                        bars[2].style.transform = 'none';
+                    }
+                });
+            }
+        })();
+
+        // Lógica de interface para os botões de seleção de Turno
+        (function() {
+            const botoesTurno = document.querySelectorAll('.btn-turno');
+            const inputTurno = document.getElementById('turnoSelecionado');
+
+            if (botoesTurno && inputTurno) {
+                botoesTurno.forEach(btn => {
+                    btn.addEventListener('click', () => {
+                        botoesTurno.forEach(b => b.classList.remove('active'));
+                        btn.classList.add('active');
+                        inputTurno.value = btn.getAttribute('data-turno');
+                    });
+                });
+            }
+        })();
+    </script>
+</body>
+</html>
