@@ -29,8 +29,6 @@ public class MovimentacaoService {
         return (Gestor) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     }
 
-    // --- Métodos de filtragem existentes ---
-
     @Transactional(readOnly = true)
     public List<Movimentacao> buscarPorMesEAno(int ano, int mes) {
         return movimentacaoRepository.findByMesEAno(ano, mes);
@@ -40,8 +38,6 @@ public class MovimentacaoService {
     public List<Movimentacao> buscarPorDataExata(LocalDate data) {
         return movimentacaoRepository.findByDataExata(data);
     }
-
-    // --- Métodos de negócio existentes ---
 
     @Transactional
     public Doacao cadastrarDoacao(BigDecimal valor, MultipartFile comprovante) throws IOException {
@@ -76,9 +72,14 @@ public class MovimentacaoService {
         gasto.setQtdMarmitasProduzidas(qtdMarmitas);
         gasto.setGestor(getGestorLogado());
 
+        // Adicionei este log para você ver no Termux se o arquivo está sendo processado
         if (comprovante != null && !comprovante.isEmpty()) {
+            System.out.println("Enviando arquivo para Cloudinary: " + comprovante.getOriginalFilename());
             String urlPublica = cloudinaryService.uploadArquivo(comprovante);
+            System.out.println("Upload concluído! URL: " + urlPublica);
             gasto.setUrlComprovante(urlPublica);
+        } else {
+            System.out.println("Nenhum comprovante foi enviado ou o arquivo está vazio.");
         }
 
         return gastoRepository.save(gasto);
@@ -101,8 +102,6 @@ public class MovimentacaoService {
         movimentacao.setStatus(novoStatus);
         return movimentacaoRepository.save(movimentacao);
     }
-
-    // --- MÉTODOS NOVOS (SUBSTITUINDO O ANTIGO editarGasto) ---
 
     @Transactional
     public Movimentacao editarDadosGasto(Long id, GastoDTO dto) {
@@ -133,8 +132,6 @@ public class MovimentacaoService {
 
         return movimentacaoRepository.save(mov);
     }
-
-    // --- Método de exclusão mantido ---
 
     @Transactional
     public void excluirGasto(Long idMovimentacao) {

@@ -50,6 +50,7 @@ public class MovimentacaoController {
         @RequestParam(value = "comprovante", required = false) MultipartFile comprovante
     ) {
         try {
+            // O Service já deve estar configurado para usar o CloudinaryService
             Gasto gastoSalvo = movimentacaoService.cadastrarGasto(
                 gastoDTO.valor(),
                 gastoDTO.categoria(),
@@ -73,8 +74,6 @@ public class MovimentacaoController {
         }
     }
 
-    // --- MÉTODOS DE EDIÇÃO ATUALIZADOS ---
-
     @PutMapping("/gasto/{id}")
     public ResponseEntity<?> editarDados(@PathVariable Long id, @Valid @RequestBody GastoDTO dto) {
         try {
@@ -97,8 +96,6 @@ public class MovimentacaoController {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body("Erro: " + e.getMessage());
         }
     }
-
-    // --- FIM DOS MÉTODOS DE EDIÇÃO ---
 
     @DeleteMapping("/gasto/{id}")
     public ResponseEntity<?> removerGasto(@PathVariable Long id) {
@@ -127,7 +124,6 @@ public class MovimentacaoController {
         } else if (ano != null && mes != null) {
             return ResponseEntity.ok(movimentacaoService.buscarPorMesEAno(ano, mes));
         }
-
         return ResponseEntity.badRequest().build();
     }
 }
