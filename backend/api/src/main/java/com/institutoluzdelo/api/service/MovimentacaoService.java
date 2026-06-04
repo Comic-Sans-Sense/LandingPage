@@ -36,6 +36,8 @@ public class MovimentacaoService {
     //private Gestor getGestorLogado() {
     //    return (Gestor) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     //}
+
+    //agora, todo movimento inserido será relacionado ao gestor de id 1. O problema está na autenticação, pois funcionou quando retirei ela kkkkk
     private Gestor getGestorLogado() {
         return gestorRepository.findById(1L)
                 .orElseThrow(() -> new RuntimeException("Gestor de teste não encontrado"));
