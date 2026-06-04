@@ -7,7 +7,7 @@ import org.hibernate.envers.Audited; // Import necessário
 @Table(name = "doacao")
 @PrimaryKeyJoinColumn(name = "fk_id_movimentacao")
 @Audited // Habilita a auditoria automática para esta entidade
-public class Doacao extends Movimentacao {
+public class Doacao extends com.institutoluzdelo.api.model.Movimentacao {
 
     public Doacao() {
         this.setTipoMovimentacao("doacao");

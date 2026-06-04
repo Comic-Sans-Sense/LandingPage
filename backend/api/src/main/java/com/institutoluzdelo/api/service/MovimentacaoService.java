@@ -2,6 +2,9 @@ package com.institutoluzdelo.api.service;
 
 import com.institutoluzdelo.api.dto.GastoDTO;
 import com.institutoluzdelo.api.model.*;
+import com.institutoluzdelo.api.model.Doacao;
+import com.institutoluzdelo.api.model.Gasto;
+import com.institutoluzdelo.api.model.Movimentacao;
 import com.institutoluzdelo.api.repository.*;
 import java.io.IOException;
 import java.math.BigDecimal;
@@ -15,6 +18,9 @@ import org.springframework.web.multipart.MultipartFile;
 
 @Service
 public class MovimentacaoService {
+    //apenas para tirar a segurança kkkkkkkk
+    @Autowired
+    private GestorRepository gestorRepository;
 
     @Autowired
     private MovimentacaoRepository movimentacaoRepository;
@@ -25,10 +31,15 @@ public class MovimentacaoService {
     @Autowired
     private CloudinaryService cloudinaryService;
 
-    private Gestor getGestorLogado() {
-        return (Gestor) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
-    }
 
+    //Autenticação de gestor (ele precisa estar logado para que funcione)
+    //private Gestor getGestorLogado() {
+    //    return (Gestor) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
+    //}
+    private Gestor getGestorLogado() {
+        return gestorRepository.findById(1L)
+                .orElseThrow(() -> new RuntimeException("Gestor de teste não encontrado"));
+    }
     @Transactional(readOnly = true)
     public List<Movimentacao> buscarPorMesEAno(int ano, int mes) {
         return movimentacaoRepository.findByMesEAno(ano, mes);

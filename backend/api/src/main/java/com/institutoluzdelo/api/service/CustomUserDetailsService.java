@@ -1,6 +1,5 @@
 package com.institutoluzdelo.api.service;
 
-import com.institutoluzdelo.api.model.Gestor;
 import com.institutoluzdelo.api.repository.GestorRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.security.core.userdetails.UserDetails;

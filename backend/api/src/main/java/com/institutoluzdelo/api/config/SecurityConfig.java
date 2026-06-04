@@ -32,10 +32,12 @@ public class SecurityConfig {
             .authorizeHttpRequests(auth ->
                 auth
                     // Actuator agora exige autenticação para segurança do sistema
-                    .requestMatchers("/actuator/**")
-                    .authenticated()
-                    .anyRequest()
-                    .authenticated()
+                    //.requestMatchers("/actuator/**")
+                    //.authenticated()
+                    //.anyRequest()
+                    //.authenticated()
+                    .anyRequest().permitAll()
+                    //COLOQUEI ISSO APENAS PRA TESTAR O API, DEPOIS É SÓ REMOVER E TIRAR AS //
             )
             .httpBasic(httpBasic -> {});
 

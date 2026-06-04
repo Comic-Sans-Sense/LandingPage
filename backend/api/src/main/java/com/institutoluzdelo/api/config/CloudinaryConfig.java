@@ -1,4 +1,4 @@
-package com.institutoluzdelo.api.service;
+package com.institutoluzdelo.api.config;
 
 import com.cloudinary.Cloudinary;
 import com.cloudinary.utils.ObjectUtils;

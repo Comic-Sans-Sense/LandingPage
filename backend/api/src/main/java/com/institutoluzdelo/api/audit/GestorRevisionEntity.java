@@ -5,7 +5,7 @@ import org.hibernate.envers.DefaultRevisionEntity;
 import org.hibernate.envers.RevisionEntity;
 
 @Entity
-@RevisionEntity(GestorRevisionListener.class)
+@RevisionEntity(com.institutoluzdelo.api.audit.GestorRevisionListener.class)
 public class GestorRevisionEntity extends DefaultRevisionEntity {
 
     @Column(name = "id_gestor")
