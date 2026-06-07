@@ -9,8 +9,10 @@ import com.institutoluzdelo.api.repository.*;
 import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -31,6 +33,15 @@ public class MovimentacaoService {
     @Autowired
     private CloudinaryService cloudinaryService;
 
+
+    // Método seguro para buscar o gestor
+    private Gestor getGestorLogado() {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth != null && auth.getPrincipal() instanceof Gestor) {
+            return (Gestor) auth.getPrincipal();
+        }
+        return null;
+    }
 
     //Autenticação de gestor (ele precisa estar logado para que funcione)
     //private Gestor getGestorLogado() {
@@ -58,6 +69,9 @@ public class MovimentacaoService {
         doacao.setValor(valor);
         doacao.setTipoMovimentacao("doacao");
         doacao.setStatus("pendente");
+        doacao.setDataCriacao(LocalDateTime.now());
+
+        // A doação é pública, então o gestor pode ser null
         doacao.setGestor(getGestorLogado());
 
         if (comprovante != null && !comprovante.isEmpty()) {
@@ -83,16 +97,18 @@ public class MovimentacaoService {
         gasto.setCategoria(categoria);
         gasto.setDescricao(descricao);
         gasto.setQtdMarmitasProduzidas(qtdMarmitas);
-        gasto.setGestor(getGestorLogado());
 
-        // Adicionei este log para você ver no Termux se o arquivo está sendo processado
+        // Gasto exige gestor logado
+        Gestor gestor = getGestorLogado();
+        if (gestor == null) {
+            throw new RuntimeException("Gestor não autenticado para realizar gasto.");
+        }
+        gasto.setGestor(gestor);
+        gasto.setDataCriacao(LocalDateTime.now());
+
         if (comprovante != null && !comprovante.isEmpty()) {
-            System.out.println("Enviando arquivo para Cloudinary: " + comprovante.getOriginalFilename());
             String urlPublica = cloudinaryService.uploadArquivo(comprovante);
-            System.out.println("Upload concluído! URL: " + urlPublica);
             gasto.setUrlComprovante(urlPublica);
-        } else {
-            System.out.println("Nenhum comprovante foi enviado ou o arquivo está vazio.");
         }
 
         return gastoRepository.save(gasto);
@@ -106,10 +122,6 @@ public class MovimentacaoService {
 
         if (!"doacao".equals(movimentacao.getTipoMovimentacao())) {
             throw new IllegalArgumentException("Esta movimentação não é uma doação!");
-        }
-
-        if (!novoStatus.equals("pendente") && !novoStatus.equals("aprovado") && !novoStatus.equals("rejeitado")) {
-            throw new IllegalArgumentException("Status inválido!");
         }
 
         movimentacao.setStatus(novoStatus);
@@ -151,10 +163,6 @@ public class MovimentacaoService {
         Movimentacao movimentacao = movimentacaoRepository
             .findById(idMovimentacao)
             .orElseThrow(() -> new RuntimeException("Gasto não encontrado!"));
-
-        if (!"gasto".equals(movimentacao.getTipoMovimentacao())) {
-            throw new IllegalArgumentException("Apenas gastos podem ser excluídos do sistema!");
-        }
 
         gastoRepository.deleteByMovimentacaoId(idMovimentacao);
         movimentacaoRepository.delete(movimentacao);

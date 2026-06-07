@@ -19,7 +19,6 @@ public class Gestor implements UserDetails {
     @Column(name = "url_slug", nullable = false, length = 50)
     private String urlSlug;
 
-    // Usaremos o email para login
     @Column(nullable = false, unique = true)
     private String email;
 
@@ -32,7 +31,6 @@ public class Gestor implements UserDetails {
 
     @Override
     public Collection<? extends GrantedAuthority> getAuthorities() {
-        // Define que todo gestor tem a permissão básica de "ROLE_USER"
         return List.of(new SimpleGrantedAuthority("ROLE_USER"));
     }
 
@@ -90,6 +88,10 @@ public class Gestor implements UserDetails {
 
     public void setEmail(String email) {
         this.email = email;
+    }
+
+    public String getSenha() {
+        return senha;
     }
 
     public void setSenha(String senha) {
