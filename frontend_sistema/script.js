@@ -1,437 +1,361 @@
-console.log('Sistema iniciado com integração à API');
+console.log('Sistema iniciado com integração ao Back-end');
 
-// CONFIGURAÇÕES DA API
-const API_BASE_URL = 'http://localhost:8080';
-const USERNAME = 'moiseskennedy2005@gmail.com';
-const PASSWORD = 'moises123';
+// Configuração da URL base da API do Spring Boot
+const API_BASE_URL = 'http://localhost:8080/api';
 
-// Geração do Token Basic Auth
-const authHeader = 'Basic ' + btoa(`${USERNAME}:${PASSWORD}`);
+// FUNÇÃO AUXILIAR: Retorna os cabeçalhos padrões com o Token JWT se o usuário estiver logado
+function getAuthHeaders(extraHeaders = {}) {
+  const token = localStorage.getItem('token');
+  if (!token) {
+    // Se não houver token, redireciona para a tela de login (exceto se já estiver nela)
+    if (!window.location.href.includes('login.html')) {
+      window.location.href = 'login.html';
+    }
+    return extraHeaders;
+  }
+  return {
+    'Authorization': `Bearer ${token}`,
+    ...extraHeaders
+  };
+}
 
-// Headers padrão para requisições JSON
-const jsonHeaders = {
-  'Content-Type': 'application/json',
-  'Authorization': authHeader
-};
+// LOGIN: Conecta com o LoginController (/api/login)
+async function login() {
+  const emailInput = document.getElementById('email');
+  const senhaInput = document.getElementById('senha');
 
-// Headers padrão para requisições que não mudam o corpo (GET, DELETE)
-const defaultHeaders = {
-  'Authorization': authHeader
-};
+  if (!emailInput || !senhaInput) return;
 
-// Variáveis de estado da aplicação (substituindo o localStorage)
-let notificacoes = [];
-let historico = [];
-let rejeitados = [];
-let filtroAtual = 'Todos';
+  const email = emailInput.value;
+  const senha = senhaInput.value;
 
-// LOGIN
-function login() {
-  const senha = document.getElementById('senha').value;
-
-  if (senha.trim() === '') {
-    alert('Digite uma senha');
+  if (email.trim() === '' || senha.trim() === '') {
+    alert('Por favor, preencha o e-mail e a senha.');
     return;
   }
 
-  // Como o login agora é fixo e autenticado via API pelo Basic Auth,
-  // validamos localmente ou simulamos o sucesso se a senha bater com a da API
-  if (senha === PASSWORD) {
-    localStorage.setItem('logado', 'true');
-    window.location.href = 'notificacoes.html';
-  } else {
-    alert('Senha incorreta.');
-  }
-}
-
-// BUSCAR DADOS DA API
-async function carregarDados() {
   try {
-    // Busca paralela de todas as listagens da API
-    const [resNotif, resHist, resRejeitados] = await Promise.all([
-      fetch(`${API_BASE_URL}/api/notificacoes`, { headers: defaultHeaders }),
-      fetch(`${API_BASE_URL}/api/gastos`, { headers: defaultHeaders }),
-      fetch(`${API_BASE_URL}/api/gastos/rejeitados`, { headers: defaultHeaders })
-    ]);
-
-    if (resNotif.ok) notificacoes = await resNotif.json();
-    if (resHist.ok) historico = await resHist.json();
-    if (resRejeitados.ok) rejeitados = await resRejeitados.json();
-
-    // Atualiza os componentes visuais após o carregamento bem-sucedido
-    renderNotificacoes();
-    renderHistorico();
-    renderRejeitados();
-    atualizarSaldo();
-
-  } catch (error) {
-    console.error('Erro ao conectar com a API:', error);
-  }
-}
-
-// REGISTRAR GASTO (Com upload para Cloudinary via API)
-async function registrarGasto() {
-  const valor = document.getElementById('valor').value;
-  const descricao = document.getElementById('descricao').value;
-  
-  const btnActive = document.querySelector('.filter-btn.active');
-  const categoria = btnActive ? btnActive.innerText : 'Geral';
-  
-  // Elemento do tipo file no HTML para o novo fluxo do Cloudinary
-  const inputComprovante = document.getElementById('comprovante'); 
-
-  if (valor === '' || descricao === '') {
-    alert('Preencha todos os campos');
-    return;
-  }
-
-  // Criação do FormData para suportar envio de arquivos e strings juntos
-  const formData = new FormData();
-  formData.append('valor', parseFloat(valor));
-  formData.append('descricao', descricao);
-  formData.append('categoria', categoria);
-  formData.append('tipo', 'gasto');
-  
-  if (inputComprovante && inputComprovante.files[0]) {
-    formData.append('file', inputComprovante.files[0]); // Arquivo capturado do input
-  }
-
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/gastos`, {
+    const response = await fetch(`${API_BASE_URL}/login`, {
       method: 'POST',
       headers: {
-        'Authorization': authHeader // Nota: Não definir Content-Type manual para FormData
+        'Content-Type': 'application/json'
       },
+      body: JSON.stringify({ email: email, senha: senha })
+    });
+
+    if (!response.ok) {
+      throw new Error('Credenciais inválidas ou erro no servidor.');
+    }
+
+    // O LoginController retorna diretamente a string do Token JWT
+    const token = await response.text();
+    
+    localStorage.setItem('logado', 'true');
+    localStorage.setItem('token', token); // Armazena o token para as próximas requisições
+    
+    window.location.href = 'notificacoes.html';
+  } catch (error) {
+    console.error('Erro ao fazer login:', error);
+    alert('Erro ao realizar o login. Verifique suas credenciais.');
+  }
+}
+
+// LOGOUT (Auxiliar para limpar o armazenamento)
+function logout() {
+  localStorage.clear();
+  window.location.href = 'login.html';
+}
+
+// REGISTRAR GASTO: Envia os dados como Multipart (FormData) para o MovimentacaoController
+async function registrarGasto() {
+  const valorInput = document.getElementById('valor');
+  const descricaoInput = document.getElementById('descricao');
+  const fileInput = document.getElementById('file-input');
+
+  if (!valorInput || !descricaoInput) return;
+
+  const valor = valorInput.value;
+  const descricao = descricaoInput.value;
+
+  // Captura qual botão de categoria está ativo
+  const btnAtivo = document.querySelector('.filters .filter-btn.active');
+  let categoria = btnAtivo ? btnAtivo.textContent.trim().toLowerCase() : 'outros';
+  if (categoria === 'tecidos') categoria = 'tecido'; // Ajuste para o Pattern do GastoDTO
+
+  if (!valor || valor <= 0) {
+    alert('Insira um valor válido maior que zero.');
+    return;
+  }
+
+  if (!fileInput || fileInput.files.length === 0) {
+    alert('Por favor, selecione um arquivo de comprovante.');
+    return;
+  }
+
+  // Cria o FormData para envio Multipart
+  const formData = new FormData();
+  formData.append('valor', valor);
+  formData.append('categoria', categoria);
+  formData.append('descricao', descricao);
+  
+  if (categoria === 'marmitas') {
+    formData.append('qtdMarmitas', 10); // Valor padrão ou capturado de um input
+  } else {
+    formData.append('qtdMarmitas', 0);
+  }
+
+  // O nome do parâmetro aqui deve ser exatamente o que o @RequestPart do seu Controller espera
+  formData.append('comprovante', fileInput.files[0]);
+
+  try {
+    const response = await fetch(`${API_BASE_URL}/movimentacoes/gasto`, {
+      method: 'POST',
+      headers: getAuthHeaders(), // Não adicione Content-Type aqui, o browser resolve o boundary do multipart
       body: formData
     });
 
-    if (!response.ok) throw new Error('Erro ao salvar o gasto no servidor.');
+    if (!response.ok) {
+      const txtErro = await response.text();
+      throw new Error(txtErro || 'Erro ao registrar gasto.');
+    }
 
-    alert('Gasto registrado com sucesso');
+    alert('Gasto registrado com sucesso e enviado para aprovação!');
     
-    // Limpa os campos
-    document.getElementById('valor').value = '';
-    document.getElementById('descricao').value = '';
-    if (inputComprovante) inputComprovante.value = '';
-
-    // Recarrega os dados atualizados da API
-    carregarDados();
-
+    // Limpa os campos após o sucesso
+    valorInput.value = '';
+    descricaoInput.value = '';
+    if (fileInput) fileInput.value = '';
+    
   } catch (error) {
-    alert('Falha ao registrar gasto: ' + error.message);
+    console.error('Erro ao registrar gasto:', error);
+    alert('Erro ao registrar gasto: ' + error.message);
   }
 }
 
-// RENDER NOTIFICAÇÕES
-function renderNotificacoes() {
+// BUSCAR MOVIMENTAÇÕES (HISTÓRICO / NOTIFICAÇÕES): Traz os dados reais da API
+async function carregarMovimentacoes() {
+  try {
+    const response = await fetch(`${API_BASE_URL}/movimentacoes`, {
+      method: 'GET',
+      headers: getAuthHeaders({ 'Content-Type': 'application/json' })
+    });
+
+    if (!response.ok) throw new Error('Erro ao buscar movimentações da API.');
+
+    const dados = await response.json();
+    return dados; 
+  } catch (error) {
+    console.error('Erro ao carregar dados do servidor:', error);
+    return [];
+  }
+}
+
+// RENDERIZAR NOTIFICAÇÕES (Páginas pendentes)
+async function renderNotificacoes() {
   const container = document.getElementById('lista-notificacoes');
   if (!container) return;
 
-  container.innerHTML = '';
+  container.innerHTML = '<p style="padding:20px;">Carregando notificações reais...</p>';
+  const movimentacoes = await carregarMovimentacoes();
+  
+  // Filtra ignorando maiúsculas/minúsculas
+  const pendentes = movimentacoes.filter(item => item.status && item.status.toLowerCase() === 'pendente');
 
-  if (notificacoes.length === 0) {
-    container.innerHTML = `<div class="card"><p>Nenhuma notificação encontrada.</p></div>`;
+  if (pendentes.length === 0) {
+    container.innerHTML = '<p style="padding:20px; color:#666;">Nenhuma notificação ou doação pendente no momento.</p>';
     return;
   }
 
-  notificacoes.forEach(item => {
-    const ehDoacao = item.tipo === 'doacao';
-    const titulo = ehDoacao ? 'Nova doação recebida' : 'Revisão de Gasto';
-    const infoExtra = ehDoacao ? `Doador: ${item.nome}` : `Descrição: ${item.descricao}`;
-
-    container.innerHTML += `
-      <div class="card">
-        <div class="valor">R$ ${parseFloat(item.valor).toFixed(2)}</div>
-        <div class="data">${item.data || new Date(item.createdAt).toLocaleString('pt-BR')}</div>
-
-        <p><strong>${titulo}</strong></p>
-        <p>${infoExtra}</p>
-        ${ehDoacao ? `<p>Comprovante: <a href="${item.comprovante}" target="_blank">Ver Imagem</a></p>` : `<p>Categoria: ${item.categoria}</p>`}
-
-        <div class="actions">
-          <button class="btn btn-red" onclick="rejeitarGasto(${item.id})">Rejeitar</button>
-          <button class="btn btn-green" onclick="aprovarGasto(${item.id})">Aprovar</button>
-        </div>
+  container.innerHTML = '';
+  pendentes.forEach(item => {
+    const dataFormatada = new Date(item.dataCriacao).toLocaleString('pt-BR');
+    
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="card-info">
+        <div class="card-title">Nova entrada cadastrada (via formulário externo)</div>
+        <div class="card-meta">Valor: R$ ${Number(item.valor).toFixed(2)} | Tipo: ${item.tipoMovimentacao}</div>
+        <div class="card-date">Criado em: ${dataFormatada}</div>
+      </div>
+      <div class="card-actions">
+        <button onclick="alterarStatusMovimentacao(${item.id}, 'APROVADO')" class="btn btn-approve">Aprovar</button>
+        <button onclick="alterarStatusMovimentacao(${item.id}, 'REJEITADO')" class="btn btn-reject">Rejeitar</button>
       </div>
     `;
+    container.appendChild(card);
   });
+
+  atualizarSaldoGeral(movimentacoes);
 }
 
-// APROVAR DOACÃO/GASTO PENDENTE
-async function aprovarGasto(id) {
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/notificacoes/${id}/aprovar`, {
-      method: 'POST',
-      headers: jsonHeaders
-    });
-
-    if (!response.ok) throw new Error('Não foi possível aprovar o item.');
-
-    alert('Registro aprovado e enviado para o histórico!');
-    carregarDados();
-  } catch (error) {
-    alert(error.message);
-  }
-}
-
-// REJEITAR NOTIFICAÇÃO
-async function rejeitarGasto(id) {
-  try {
-    const response = await fetch(`${API_BASE_URL}/api/notificacoes/${id}/rejeitar`, {
-      method: 'POST',
-      headers: jsonHeaders
-    });
-
-    if (!response.ok) throw new Error('Não foi possível rejeitar o item.');
-
-    alert('O registro foi movido para a aba de Rejeitados.');
-    carregarDados();
-  } catch (error) {
-    alert(error.message);
-  }
-}
-
-// FILTROS DE CATEGORIA
-function filtrarHistorico(categoria) {
-  filtroAtual = categoria;
-  renderHistorico();
-}
-
-// RENDER HISTÓRICO
-function renderHistorico() {
-  const container = document.getElementById('lista-historico');
+// RENDERIZAR HISTÓRICO (Filtro Todos / Doações / Gastos)
+async function renderHistorico(filtro = 'Todos') {
+  const container = document.getElementById('lista-historico'); 
   if (!container) return;
 
-  container.innerHTML = '';
+  container.innerHTML = '<p style="padding:20px;">Carregando histórico...</p>';
+  const movimentacoes = await carregarMovimentacoes();
 
-  const dadosFiltrados = historico
-    .slice() 
-    .reverse() 
-    .filter(item => {
-      if (filtroAtual === 'Todos') return true;
-      return item.categoria === filtroAtual;
-    });
+  // Exibe apenas as aprovadas no histórico
+  let filtradas = movimentacoes.filter(item => item.status && item.status.toLowerCase() === 'aprovado');
 
-  if (dadosFiltrados.length === 0) {
-    container.innerHTML = `<div class="card"><p>Nenhum registro encontrado.</p></div>`;
+  if (filtro === 'Doação') {
+    filtradas = filtradas.filter(item => item.tipoMovimentacao && item.tipoMovimentacao.toLowerCase() === 'doacao');
+  } else if (filtro === 'Gasto') {
+    filtradas = filtradas.filter(item => item.tipoMovimentacao && item.tipoMovimentacao.toLowerCase() === 'gasto');
+  }
+
+  if (filtradas.length === 0) {
+    container.innerHTML = `<p style="padding:20px; color:#666;">Nenhum registro encontrado para a categoria: ${filtro}.</p>`;
     return;
   }
 
-  dadosFiltrados.forEach(gasto => {
-    const badgeClass = gasto.tipo === 'doacao' ? 'badge-green' : 'badge-red';
-    const rotuloStatus = gasto.status === 'rejeitado' ? 'Rejeitado em:' : 'Aprovado em:';
-    const dataProc = gasto.dataProcessamento || gasto.data; 
+  container.innerHTML = '';
+  filtradas.forEach(item => {
+    const dataFormatada = new Date(item.dataCriacao).toLocaleString('pt-BR');
+    const isDoacao = item.tipoMovimentacao && item.tipoMovimentacao.toLowerCase() === 'doacao';
+    const badgeClass = isDoacao ? 'status-entrada' : 'status-saida';
+    const sinal = isDoacao ? '+' : '-';
 
-    container.innerHTML += `
-      <div class="card card-gasto">
-        <div class="gasto-info">
-          <div class="valor" style="color: ${gasto.tipo === 'doacao' ? '#37c777' : '#ef3d3d'}">
-            ${gasto.tipo === 'doacao' ? '+' : '-'} R$ ${parseFloat(gasto.valor).toFixed(2)}
-          </div>
-          <div class="data">
-            <strong>Criado em:</strong> ${gasto.data} 
-            <span class="badge ${badgeClass}">${gasto.tipo === 'doacao' ? 'Doação' : 'Gasto'}</span>
-          </div>
-          <p><strong>Categoria:</strong> ${gasto.categoria}</p>
-          <p style="margin-top: 5px; color: #555;">${gasto.descricao || 'Processado pelo sistema'}</p>
-          
-          <div class="actions">
-            <button class="btn btn-green" style="padding: 6px 12px; font-size: 14px;" onclick="editarGasto(${gasto.id})">Editar</button>
-            <button class="btn btn-red" style="padding: 6px 12px; font-size: 14px;" onclick="excluirHistorico(${gasto.id})">Excluir</button>
-          </div>
+    const card = document.createElement('div');
+    card.className = 'card card-gasto';
+    card.innerHTML = `
+      <div class="gasto-info">
+        <div class="card-title" style="display:flex; align-items:center; gap:10px;">
+          ${item.tipoMovimentacao.toUpperCase()} 
+          <span class="status-badge ${badgeClass}">${isDoacao ? 'Recebido' : 'Gasto'}</span>
         </div>
-
-        <div class="gasto-retorno">
-          <div class="status-timeline">
-            <span class="status-label">${rotuloStatus}</span>
-            <span class="status-data">${dataProc}</span>
-          </div>
-
-          <div class="gasto-comprovante">
-            <a href="${gasto.comprovante || '#'}" target="_blank" class="btn-comprovante" ${!gasto.comprovante ? 'style="opacity: 0.5; pointer-events: none;" title="Sem comprovante"' : ''}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <polyline points="14 2 14 8 20 8"></polyline>
-                <line x1="16" y1="13" x2="8" y2="13"></line>
-                <line x1="16" y1="17" x2="8" y2="17"></line>
-              </svg>
-              Comprovante
-            </a>
-          </div>
+        <div class="card-meta">Descrição: ${item.descricao || 'Movimentação do instituto'}</div>
+        ${item.urlComprovante ? `<div class="card-meta"><a href="${item.urlComprovante}" target="_blank" style="color:#44d1c7; font-weight:bold;">📄 Ver Comprovante</a></div>` : ''}
+      </div>
+      <div class="gasto-retorno">
+        <div class="card-title" style="color: ${isDoacao ? '#2e7d32' : '#c62828'}">
+          ${sinal} R$ ${Number(item.valor).toFixed(2)}
+        </div>
+        <div class="status-timeline">
+          <span style="font-size:12px; color:#888;">Processado em</span>
+          <span style="font-weight:bold; font-size:13px;">${dataFormatada}</span>
         </div>
       </div>
     `;
+    container.appendChild(card);
   });
+
+  atualizarSaldoGeral(movimentacoes);
 }
 
-// EDITAR REGISTRO NO BACK-END
-async function editarGasto(id) {
-  const gasto = historico.find(item => item.id === id);
-
-  const novoValor = prompt('Novo valor:', gasto.valor);
-  const novaDescricao = prompt('Nova descrição:', gasto.descricao);
-
-  if (novoValor && novaDescricao) {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/gastos/${id}`, {
-        method: 'PUT',
-        headers: jsonHeaders,
-        body: JSON.stringify({
-          valor: parseFloat(novoValor),
-          descricao: novaDescricao,
-          categoria: gasto.categoria,
-          tipo: gasto.tipo
-        })
-      });
-
-      if (!response.ok) throw new Error('Erro ao atualizar dados no servidor.');
-
-      alert('Registro atualizado com sucesso!');
-      carregarDados();
-    } catch (error) {
-      alert(error.message);
-    }
-  }
-}
-
-// MOVER DO HISTÓRICO PARA REJEITADOS
-async function excluirHistorico(id) {
-  if (confirm('Tem certeza que deseja rejeitar e remover este registro do histórico?')) {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/gastos/${id}/mover-rejeitados`, {
-        method: 'POST',
-        headers: jsonHeaders
-      });
-
-      if (!response.ok) throw new Error('Erro ao processar requisição no back-end.');
-
-      alert('O registro foi movido para a aba de Rejeitados.');
-      carregarDados();
-    } catch (error) {
-      alert(error.message);
-    }
-  }
-}
-
-// RENDER REJEITADOS
-function renderRejeitados() {
+// RENDERIZAR REJEITADOS
+async function renderRejeitados() {
   const container = document.getElementById('lista-rejeitados');
   if (!container) return;
 
-  container.innerHTML = '';
+  container.innerHTML = '<p style="padding:20px;">Carregando itens rejeitados...</p>';
+  const movimentacoes = await carregarMovimentacoes();
+  const rejeitados = movimentacoes.filter(item => item.status && item.status.toLowerCase() === 'rejeitado');
 
   if (rejeitados.length === 0) {
-    container.innerHTML = `<div class="card"><p>Nenhum registro rejeitado.</p></div>`;
+    container.innerHTML = '<p style="padding:20px; color:#666;">Nenhum registro foi rejeitado.</p>';
     return;
   }
 
-  rejeitados.slice().reverse().forEach(gasto => {
-    const dataProc = gasto.dataProcessamento || gasto.data;
-
-    container.innerHTML += `
-      <div class="card card-gasto">
-        <div class="gasto-info">
-          <div class="valor" style="color: #ef3d3d">- R$ ${parseFloat(gasto.valor).toFixed(2)}</div>
-          <div class="data">
-            <strong>Criado em:</strong> ${gasto.data}
-            <span class="badge badge-red">Rejeitado</span>
-          </div>
-          <p><strong>Categoria:</strong> ${gasto.categoria || 'Não definida'}</p>
-          <p style="margin-top: 5px; color: #555;">${gasto.descricao || 'Registro removido do histórico'}</p>
-
-          <div class="actions">
-            <button class="btn btn-cyan" onclick="verificarNovamente(${gasto.id})">Restaurar (Verificar)</button>
-            <button class="btn btn-red" onclick="excluirRejeitado(${gasto.id})">Excluir Permanentemente</button>
-          </div>
-        </div>
-
-        <div class="gasto-retorno">
-          <div class="status-timeline">
-            <span class="status-label">Rejeitado em:</span>
-            <span class="status-data">${dataProc}</span>
-          </div>
-          <div class="gasto-comprovante">
-            <a href="${gasto.comprovante || '#'}" target="_blank" class="btn-comprovante" ${!gasto.comprovante ? 'style="opacity: 0.5; pointer-events: none;" title="Sem comprovante"' : ''}>
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
-                <polyline points="14 2 14 8 20 8"></polyline>
-                <line x1="16" y1="13" x2="8" y2="13"></line>
-                <line x1="16" y1="17" x2="8" y2="17"></line>
-              </svg>
-              Comprovante
-            </a>
-          </div>
-        </div>
+  container.innerHTML = '';
+  rejeitados.forEach(item => {
+    const dataFormatada = new Date(item.dataCriacao).toLocaleString('pt-BR');
+    const card = document.createElement('div');
+    card.className = 'card';
+    card.innerHTML = `
+      <div class="card-info">
+        <div class="card-title" style="color:#c62828;">Registro Rejeitado</div>
+        <div class="card-meta">Valor: R$ ${Number(item.valor).toFixed(2)} | Tipo: ${item.tipoMovimentacao}</div>
+        <div class="card-date">Modificado em: ${dataFormatada}</div>
       </div>
     `;
+    container.appendChild(card);
   });
+
+  atualizarSaldoGeral(movimentacoes);
 }
 
-// RESTAURAR REJEITADO PARA CONFIRMAÇÃO
-async function verificarNovamente(id) {
+// AÇÃO DE APROVAR OU REJEITAR
+async function alterarStatusMovimentacao(id, novoStatus) {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/gastos/rejeitados/${id}/restaurar`, {
-      method: 'POST',
-      headers: jsonHeaders
+    // RECOMENDAÇÃO: Ajuste esta URL para bater com o método de atualizar status que você criar no back-end
+    let urlEndpoint = `${API_BASE_URL}/movimentacoes/${id}/status?status=${novoStatus}`;
+    
+    const response = await fetch(urlEndpoint, {
+      method: 'PATCH', // Geralmente usa-se PATCH ou PUT para atualizações parciais
+      headers: getAuthHeaders({ 'Content-Type': 'application/json' })
     });
 
-    if (!response.ok) throw new Error('Não foi possível restaurar o item.');
+    if (!response.ok) throw new Error('Não foi possível processar a ação no servidor.');
 
-    alert('O registro retornou para a aba de notificações para nova conferência.');
-    carregarDados();
+    alert(`Movimentação atualizada para ${novoStatus} com sucesso!`);
+    renderNotificacoes();
   } catch (error) {
-    alert(error.message);
+    console.error(error);
+    alert('Erro ao atualizar status no servidor. Verifique o mapeamento da rota no back-end.');
   }
 }
 
-// EXCLUIR PERMANENTEMENTE DO BANCO
-async function excluirRejeitado(id) {
-  if (confirm('Ação irreversível. Deseja deletar permanentemente este registro da base de dados?')) {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/gastos/rejeitados/${id}`, {
-        method: 'DELETE',
-        headers: defaultHeaders
-      });
+// CALCULAR E ATUALIZAR SALDO DINAMICAMENTE
+function atualizarSaldoGeral(movimentacoes) {
+  const saldoElement = document.querySelector('.saldo');
+  if (!saldoElement) return;
 
-      if (!response.ok) throw new Error('Erro ao deletar registro no servidor.');
-
-      alert('Registro apagado permanentemente.');
-      carregarDados();
-    } catch (error) {
-      alert(error.message);
+  let saldo = 0;
+  movimentacoes.forEach(item => {
+    if (item.status && item.status.toLowerCase() === 'aprovado') {
+      if (item.tipoMovimentacao && item.tipoMovimentacao.toLowerCase() === 'doacao') {
+        saldo += Number(item.valor);
+      } else if (item.tipoMovimentacao && item.tipoMovimentacao.toLowerCase() === 'gasto') {
+        saldo -= Number(item.valor);
+      }
     }
-  }
+  });
+
+  saldoElement.textContent = `Saldo atual: R$ ${saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 }
 
-// CALCULAR SALDO REAL COM DADOS DO BANCO
-function atualizarSaldo() {
-  const saldoElements = document.querySelectorAll('.saldo');
-  let entradas = 0;
-  let saidas = 0;
-
-  historico.forEach(item => {
-    if (item.tipo === 'doacao') {
-      entradas += Number(item.valor);
+// FILTRAR HISTÓRICO (Botões da tela)
+function filtrarHistorico(tipo) {
+  const botoes = document.querySelectorAll('.filters .filter-btn');
+  botoes.forEach(btn => {
+    if (btn.textContent.trim().includes(tipo) || (tipo === 'Todos' && btn.textContent.trim() === 'Todos')) {
+      btn.classList.add('active');
     } else {
-      saidas += Number(item.valor);
+      btn.classList.remove('active');
     }
   });
-
-  const saldoTotal = entradas - saidas;
-
-  saldoElements.forEach(el => {
-    el.innerHTML = `Saldo atual: R$ ${saldoTotal.toFixed(2)}`;
-  });
+  
+  renderHistorico(tipo);
 }
 
-// EVENT LISTENER DOS FILTROS VIZUAIS
-const botoes = document.querySelectorAll('.filter-btn');
-botoes.forEach(botao => {
-  botao.addEventListener('click', () => {
-    botoes.forEach(btn => btn.classList.remove('active'));
-    botao.classList.add('active');
+// INICIALIZADOR AUTOMÁTICO DE ACORDO COM A PÁGINA ABERTA
+document.addEventListener('DOMContentLoaded', () => {
+  // Configura os botões de categoria na página de registrar gastos
+  const botoesFiltro = document.querySelectorAll('.card .filters .filter-btn');
+  botoesFiltro.forEach(btn => {
+    btn.addEventListener('click', function() {
+      botoesFiltro.forEach(b => b.classList.remove('active'));
+      this.classList.add('active');
+    });
   });
-});
 
-// DISPARO INICIAL AO CARREGAR A PÁGINA
-carregarDados();
+  // Proteção: se não estiver logado e não estiver na login.html, vai ser redirecionado pelo getAuthHeaders
+  if (!localStorage.getItem('token') && !window.location.href.includes('login.html')) {
+    window.location.href = 'login.html';
+    return;
+  }
+
+  // Identifica a página ativa pelo ID do elemento container e popula com os dados reais
+  if (document.getElementById('lista-notificacoes')) {
+    renderNotificacoes();
+  }
+  if (document.getElementById('lista-historico')) {
+    renderHistorico('Todos');
+  }
+  if (document.getElementById('lista-rejeitados')) {
+    renderRejeitados();
+  }
+});
