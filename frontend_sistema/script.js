@@ -1,361 +1,511 @@
-console.log('Sistema iniciado com integração ao Back-end');
+console.log('Sistema iniciado');
 
-// Configuração da URL base da API do Spring Boot
-const API_BASE_URL = 'http://localhost:8080/api';
+// LOGIN
+function login() {
+  const senha = document.getElementById('senha').value;
 
-// FUNÇÃO AUXILIAR: Retorna os cabeçalhos padrões com o Token JWT se o usuário estiver logado
-function getAuthHeaders(extraHeaders = {}) {
-  const token = localStorage.getItem('token');
-  if (!token) {
-    // Se não houver token, redireciona para a tela de login (exceto se já estiver nela)
-    if (!window.location.href.includes('login.html')) {
-      window.location.href = 'login.html';
-    }
-    return extraHeaders;
+  if(senha.trim() === '') {
+    alert('Digite uma senha');
+    return;
   }
-  return {
-    'Authorization': `Bearer ${token}`,
-    ...extraHeaders
+
+  localStorage.setItem('logado', 'true');
+  window.location.href = 'notificacoes.html';
+}
+
+// DADOS MOCK
+let notificacoes = JSON.parse(localStorage.getItem('notificacoes')) || [
+  {
+    id: 1,
+    valor: 100,
+    nome: 'João',
+    tipo: 'doacao',
+    comprovante: 'comprovante.jpg',
+    data: new Date().toLocaleDateString('pt-BR') + ' às ' + new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})
+  }
+];
+
+let historico = JSON.parse(localStorage.getItem('historico')) || [];
+let rejeitados = JSON.parse(localStorage.getItem('rejeitados')) || [];
+
+// SALVAR
+function salvarDados() {
+  localStorage.setItem('notificacoes', JSON.stringify(notificacoes));
+  localStorage.setItem('historico', JSON.stringify(historico));
+  localStorage.setItem('rejeitados', JSON.stringify(rejeitados));
+}
+
+// REGISTRAR GASTO
+function registrarGasto() {
+  const valor = document.getElementById('valor').value;
+  const descricao = document.getElementById('descricao').value;
+  const categoria = document.querySelector('.filter-btn.active').innerText;
+
+  if(valor === '' || descricao === '') {
+    alert('Preencha todos os campos');
+    return;
+  }
+
+  const novoGasto = {
+    id: Date.now(),
+    valor: parseFloat(valor),
+    descricao: descricao,
+    categoria: categoria,
+    tipo: 'gasto',
+    comprovante: 'comprovante_gasto.jpg',
+    // Altere esta linha abaixo:
+    data: new Date().toLocaleDateString('pt-BR') + ' às ' + new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})
   };
+
+  historico.push(novoGasto);
+
+  salvarDados();
+
+  atualizarSaldo();
+  renderHistorico();
+
+  alert('Gasto registrado com sucesso');
+
+  document.getElementById('valor').value = '';
+  document.getElementById('descricao').value = '';
 }
 
-// LOGIN: Conecta com o LoginController (/api/login)
-async function login() {
-  const emailInput = document.getElementById('email');
-  const senhaInput = document.getElementById('senha');
-
-  if (!emailInput || !senhaInput) return;
-
-  const email = emailInput.value;
-  const senha = senhaInput.value;
-
-  if (email.trim() === '' || senha.trim() === '') {
-    alert('Por favor, preencha o e-mail e a senha.');
-    return;
-  }
-
-  try {
-    const response = await fetch(`${API_BASE_URL}/login`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({ email: email, senha: senha })
-    });
-
-    if (!response.ok) {
-      throw new Error('Credenciais inválidas ou erro no servidor.');
-    }
-
-    // O LoginController retorna diretamente a string do Token JWT
-    const token = await response.text();
-    
-    localStorage.setItem('logado', 'true');
-    localStorage.setItem('token', token); // Armazena o token para as próximas requisições
-    
-    window.location.href = 'notificacoes.html';
-  } catch (error) {
-    console.error('Erro ao fazer login:', error);
-    alert('Erro ao realizar o login. Verifique suas credenciais.');
-  }
-}
-
-// LOGOUT (Auxiliar para limpar o armazenamento)
-function logout() {
-  localStorage.clear();
-  window.location.href = 'login.html';
-}
-
-// REGISTRAR GASTO: Envia os dados como Multipart (FormData) para o MovimentacaoController
-async function registrarGasto() {
-  const valorInput = document.getElementById('valor');
-  const descricaoInput = document.getElementById('descricao');
-  const fileInput = document.getElementById('file-input');
-
-  if (!valorInput || !descricaoInput) return;
-
-  const valor = valorInput.value;
-  const descricao = descricaoInput.value;
-
-  // Captura qual botão de categoria está ativo
-  const btnAtivo = document.querySelector('.filters .filter-btn.active');
-  let categoria = btnAtivo ? btnAtivo.textContent.trim().toLowerCase() : 'outros';
-  if (categoria === 'tecidos') categoria = 'tecido'; // Ajuste para o Pattern do GastoDTO
-
-  if (!valor || valor <= 0) {
-    alert('Insira um valor válido maior que zero.');
-    return;
-  }
-
-  if (!fileInput || fileInput.files.length === 0) {
-    alert('Por favor, selecione um arquivo de comprovante.');
-    return;
-  }
-
-  // Cria o FormData para envio Multipart
-  const formData = new FormData();
-  formData.append('valor', valor);
-  formData.append('categoria', categoria);
-  formData.append('descricao', descricao);
-  
-  if (categoria === 'marmitas') {
-    formData.append('qtdMarmitas', 10); // Valor padrão ou capturado de um input
-  } else {
-    formData.append('qtdMarmitas', 0);
-  }
-
-  // O nome do parâmetro aqui deve ser exatamente o que o @RequestPart do seu Controller espera
-  formData.append('comprovante', fileInput.files[0]);
-
-  try {
-    const response = await fetch(`${API_BASE_URL}/movimentacoes/gasto`, {
-      method: 'POST',
-      headers: getAuthHeaders(), // Não adicione Content-Type aqui, o browser resolve o boundary do multipart
-      body: formData
-    });
-
-    if (!response.ok) {
-      const txtErro = await response.text();
-      throw new Error(txtErro || 'Erro ao registrar gasto.');
-    }
-
-    alert('Gasto registrado com sucesso e enviado para aprovação!');
-    
-    // Limpa os campos após o sucesso
-    valorInput.value = '';
-    descricaoInput.value = '';
-    if (fileInput) fileInput.value = '';
-    
-  } catch (error) {
-    console.error('Erro ao registrar gasto:', error);
-    alert('Erro ao registrar gasto: ' + error.message);
-  }
-}
-
-// BUSCAR MOVIMENTAÇÕES (HISTÓRICO / NOTIFICAÇÕES): Traz os dados reais da API
-async function carregarMovimentacoes() {
-  try {
-    const response = await fetch(`${API_BASE_URL}/movimentacoes`, {
-      method: 'GET',
-      headers: getAuthHeaders({ 'Content-Type': 'application/json' })
-    });
-
-    if (!response.ok) throw new Error('Erro ao buscar movimentações da API.');
-
-    const dados = await response.json();
-    return dados; 
-  } catch (error) {
-    console.error('Erro ao carregar dados do servidor:', error);
-    return [];
-  }
-}
-
-// RENDERIZAR NOTIFICAÇÕES (Páginas pendentes)
-async function renderNotificacoes() {
+// RENDER NOTIFICAÇÕES
+function renderNotificacoes() {
   const container = document.getElementById('lista-notificacoes');
-  if (!container) return;
+  if(!container) return;
 
-  container.innerHTML = '<p style="padding:20px;">Carregando notificações reais...</p>';
-  const movimentacoes = await carregarMovimentacoes();
-  
-  // Filtra ignorando maiúsculas/minúsculas
-  const pendentes = movimentacoes.filter(item => item.status && item.status.toLowerCase() === 'pendente');
+  container.innerHTML = '';
 
-  if (pendentes.length === 0) {
-    container.innerHTML = '<p style="padding:20px; color:#666;">Nenhuma notificação ou doação pendente no momento.</p>';
+  if(notificacoes.length === 0) {
+    container.innerHTML = `<div class="card"><p>Nenhuma notificação encontrada.</p></div>`;
     return;
   }
 
+  notificacoes.forEach(item => {
+    // Define o título e detalhes com base no tipo original
+    const ehDoacao = item.tipo === 'doacao';
+    const titulo = ehDoacao ? 'Nova doação recebida' : 'Revisão de Gasto';
+    const infoExtra = ehDoacao ? `Doador: ${item.nome}` : `Descrição: ${item.descricao}`;
+
+    container.innerHTML += `
+      <div class="card">
+        <div class="valor">R$ ${parseFloat(item.valor).toFixed(2)}</div>
+        <div class="data">${item.data}</div>
+
+        <p><strong>${titulo}</strong></p>
+        <p>${infoExtra}</p>
+        ${ehDoacao ? `<p>Comprovante: ${item.comprovante}</p>` : `<p>Categoria: ${item.categoria}</p>`}
+
+        <div class="actions">
+          <button class="btn btn-red" onclick="rejeitarGasto(${item.id})">Rejeitar</button>
+          <button class="btn btn-green" onclick="aprovarGasto(${item.id})">Aprovar</button>
+        </div>
+      </div>
+    `;
+  });
+}
+
+// APROVAR
+function renderHistorico() {
+  const container = document.getElementById('lista-historico');
+  if(!container) return;
+
   container.innerHTML = '';
-  pendentes.forEach(item => {
-    const dataFormatada = new Date(item.dataCriacao).toLocaleString('pt-BR');
+
+  const dadosFiltrados = historico.filter(item => {
+    if (filtroAtual === 'Todos') return true;
+    return item.categoria === filtroAtual;
+  });
+
+  if(dadosFiltrados.length === 0) {
+    container.innerHTML = `<div class="card"><p>Nenhum registro encontrado.</p></div>`;
+    return;
+  }
+
+  dadosFiltrados.forEach(gasto => {
+    // Define a cor do badge baseada no tipo
+    const badgeClass = gasto.tipo === 'doacao' ? 'badge-green' : 'badge-red';
+    const tipoTexto = gasto.tipo === 'doacao' ? 'Entrada' : 'Saída';
+
+    container.innerHTML += `
+      <div class="card">
+        <div class="valor" style="color: ${gasto.tipo === 'doacao' ? '#37c777' : '#ef3d3d'}">
+          ${gasto.tipo === 'doacao' ? '+' : '-'} R$ ${parseFloat(gasto.valor).toFixed(2)}
+        </div>
+        <div class="data">${gasto.data} <span class="badge ${badgeClass}">${tipoTexto}</span></div>
+
+        <p><strong>Categoria:</strong> ${gasto.categoria}</p>
+        <p>${gasto.descricao || 'Processado pelo sistema'}</p>
+
+        <div class="actions">
+          <button class="btn btn-green" onclick="editarGasto(${gasto.id})">Editar</button>
+          <button class="btn btn-red" onclick="excluirHistorico(${gasto.id})">Excluir</button>
+        </div>
+      </div>
+    `;
+  });
+}
+
+// REJEITAR
+function rejeitarGasto(id) {
+  const gasto = notificacoes.find(item => item.id === id);
+
+  gasto.status = 'rejeitado';
+
+  gasto.dataProcessamento = new Date().toLocaleDateString('pt-BR') + ' às ' + new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+
+  rejeitados.push(gasto);
+
+  notificacoes = notificacoes.filter(item => item.id !== id);
+
+  salvarDados();
+  renderNotificacoes();
+}
+
+// RENDER HISTÓRICO
+// Variável global para controlar o filtro atual
+let filtroAtual = 'Todos';
+
+// Função chamada pelos botões no historico.html
+function filtrarHistorico(categoria) {
+  filtroAtual = categoria;
+  renderHistorico();
+}
+
+function renderHistorico() {
+  const container = document.getElementById('lista-historico');
+  if(!container) return;
+
+  container.innerHTML = '';
+
+  const dadosFiltrados = historico
+    .slice() 
+    .reverse() 
+    .filter(item => {
+      if (filtroAtual === 'Todos') return true;
+      return item.categoria === filtroAtual;
+    });
+
+  if(dadosFiltrados.length === 0) {
+    container.innerHTML = `<div class="card"><p>Nenhum registro encontrado.</p></div>`;
+    return;
+  }
+
+  dadosFiltrados.forEach(gasto => {
+    const badgeClass = gasto.tipo === 'doacao' ? 'badge-green' : 'badge-red';
+    const tipoTexto = gasto.tipo === 'doacao' ? 'Entrada' : 'Saída';
     
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.innerHTML = `
-      <div class="card-info">
-        <div class="card-title">Nova entrada cadastrada (via formulário externo)</div>
-        <div class="card-meta">Valor: R$ ${Number(item.valor).toFixed(2)} | Tipo: ${item.tipoMovimentacao}</div>
-        <div class="card-date">Criado em: ${dataFormatada}</div>
-      </div>
-      <div class="card-actions">
-        <button onclick="alterarStatusMovimentacao(${item.id}, 'APROVADO')" class="btn btn-approve">Aprovar</button>
-        <button onclick="alterarStatusMovimentacao(${item.id}, 'REJEITADO')" class="btn btn-reject">Rejeitar</button>
+    // Define o texto sutil de aprovação ou rejeição com base no status do item
+    const rotuloStatus = gasto.status === 'rejeitado' ? 'Rejeitado em:' : 'Aprovado em:';
+    // Caso não tenha a data gravada ainda nos antigos, mostra a data padrão
+    const dataProc = gasto.dataProcessamento || gasto.data; 
+
+    container.innerHTML += `
+      <div class="card card-gasto">
+        
+        <div class="gasto-info">
+          <div class="valor" style="color: ${gasto.tipo === 'doacao' ? '#37c777' : '#ef3d3d'}">
+            ${gasto.tipo === 'doacao' ? '+' : '-'} R$ ${parseFloat(gasto.valor).toFixed(2)}
+          </div>
+          <div class="data">
+            <strong>Criado em:</strong> ${gasto.data} 
+            <span class="badge ${badgeClass}">${gasto.tipo === 'doacao' ? 'Doação' : 'Gasto'}</span>
+          </div>
+          <p><strong>Categoria:</strong> ${gasto.categoria}</p>
+          <p style="margin-top: 5px; color: #555;">${gasto.descricao || 'Processado pelo sistema'}</p>
+          
+          <div class="actions">
+            <button class="btn btn-green" style="padding: 6px 12px; font-size: 14px;" onclick="editarGasto(${gasto.id})">Editar</button>
+            <button class="btn btn-red" style="padding: 6px 12px; font-size: 14px;" onclick="excluirHistorico(${gasto.id})">Excluir</button>
+          </div>
+        </div>
+
+        <div class="gasto-retorno">
+          <div class="status-timeline">
+            <span class="status-label">${rotuloStatus}</span>
+            <span class="status-data">${dataProc}</span>
+          </div>
+
+          <div class="gasto-comprovante">
+            <a href="${gasto.comprovante || '#'}" target="_blank" class="btn-comprovante" ${!gasto.comprovante ? 'style="opacity: 0.5; pointer-events: none;" title="Sem comprovante"' : ''}>
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+                <polyline points="14 2 14 8 20 8"></polyline>
+                <line x1="16" y1="13" x2="8" y2="13"></line>
+                <line x1="16" y1="17" x2="8" y2="17"></line>
+              </svg>
+              Comprovante
+            </a>
+          </div>
+        </div>
+
       </div>
     `;
-    container.appendChild(card);
   });
-
-  atualizarSaldoGeral(movimentacoes);
 }
 
-// RENDERIZAR HISTÓRICO (Filtro Todos / Doações / Gastos)
-async function renderHistorico(filtro = 'Todos') {
-  const container = document.getElementById('lista-historico'); 
-  if (!container) return;
+// EDITAR
+function editarGasto(id) {
+  const gasto = historico.find(item => item.id === id);
 
-  container.innerHTML = '<p style="padding:20px;">Carregando histórico...</p>';
-  const movimentacoes = await carregarMovimentacoes();
+  const novoValor = prompt('Novo valor:', gasto.valor);
+  const novaDescricao = prompt('Nova descrição:', gasto.descricao);
 
-  // Exibe apenas as aprovadas no histórico
-  let filtradas = movimentacoes.filter(item => item.status && item.status.toLowerCase() === 'aprovado');
+  if(novoValor && novaDescricao) {
+    gasto.valor = novoValor;
+    gasto.descricao = novaDescricao;
 
-  if (filtro === 'Doação') {
-    filtradas = filtradas.filter(item => item.tipoMovimentacao && item.tipoMovimentacao.toLowerCase() === 'doacao');
-  } else if (filtro === 'Gasto') {
-    filtradas = filtradas.filter(item => item.tipoMovimentacao && item.tipoMovimentacao.toLowerCase() === 'gasto');
+    salvarDados();
+    renderHistorico();
   }
-
-  if (filtradas.length === 0) {
-    container.innerHTML = `<p style="padding:20px; color:#666;">Nenhum registro encontrado para a categoria: ${filtro}.</p>`;
-    return;
-  }
-
-  container.innerHTML = '';
-  filtradas.forEach(item => {
-    const dataFormatada = new Date(item.dataCriacao).toLocaleString('pt-BR');
-    const isDoacao = item.tipoMovimentacao && item.tipoMovimentacao.toLowerCase() === 'doacao';
-    const badgeClass = isDoacao ? 'status-entrada' : 'status-saida';
-    const sinal = isDoacao ? '+' : '-';
-
-    const card = document.createElement('div');
-    card.className = 'card card-gasto';
-    card.innerHTML = `
-      <div class="gasto-info">
-        <div class="card-title" style="display:flex; align-items:center; gap:10px;">
-          ${item.tipoMovimentacao.toUpperCase()} 
-          <span class="status-badge ${badgeClass}">${isDoacao ? 'Recebido' : 'Gasto'}</span>
-        </div>
-        <div class="card-meta">Descrição: ${item.descricao || 'Movimentação do instituto'}</div>
-        ${item.urlComprovante ? `<div class="card-meta"><a href="${item.urlComprovante}" target="_blank" style="color:#44d1c7; font-weight:bold;">📄 Ver Comprovante</a></div>` : ''}
-      </div>
-      <div class="gasto-retorno">
-        <div class="card-title" style="color: ${isDoacao ? '#2e7d32' : '#c62828'}">
-          ${sinal} R$ ${Number(item.valor).toFixed(2)}
-        </div>
-        <div class="status-timeline">
-          <span style="font-size:12px; color:#888;">Processado em</span>
-          <span style="font-weight:bold; font-size:13px;">${dataFormatada}</span>
-        </div>
-      </div>
-    `;
-    container.appendChild(card);
-  });
-
-  atualizarSaldoGeral(movimentacoes);
 }
 
-// RENDERIZAR REJEITADOS
-async function renderRejeitados() {
+// EXCLUIR HISTÓRICO (Agora move para rejeitados)
+function excluirHistorico(id) {
+  // 1. Encontra o item que será "excluído"
+  const itemParaMover = historico.find(item => item.id === id);
+
+  if (itemParaMover) {
+    // 2. Opcional: Atualiza o status para controle interno
+    itemParaMover.status = 'rejeitado';
+
+    itemParaMover.dataProcessamento = new Date().toLocaleDateString('pt-BR') + ' às ' + new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+    
+    // 3. Adiciona aos rejeitados
+    rejeitados.push(itemParaMover);
+
+    // 4. Remove do histórico original
+    historico = historico.filter(item => item.id !== id);
+
+    // 5. Salva e atualiza tudo
+    salvarDados();
+    atualizarSaldo();
+    renderHistorico();
+    
+    // Se você estiver na página de rejeitados, ela também atualiza
+    if (document.getElementById('lista-rejeitados')) {
+      renderRejeitados();
+    }
+
+    alert('O registro foi movido para a aba de Rejeitados.');
+  }
+}
+
+// RENDER REJEITADOS
+function renderRejeitados() {
   const container = document.getElementById('lista-rejeitados');
-  if (!container) return;
-
-  container.innerHTML = '<p style="padding:20px;">Carregando itens rejeitados...</p>';
-  const movimentacoes = await carregarMovimentacoes();
-  const rejeitados = movimentacoes.filter(item => item.status && item.status.toLowerCase() === 'rejeitado');
-
-  if (rejeitados.length === 0) {
-    container.innerHTML = '<p style="padding:20px; color:#666;">Nenhum registro foi rejeitado.</p>';
-    return;
-  }
+  if(!container) return;
 
   container.innerHTML = '';
-  rejeitados.forEach(item => {
-    const dataFormatada = new Date(item.dataCriacao).toLocaleString('pt-BR');
-    const card = document.createElement('div');
-    card.className = 'card';
-    card.innerHTML = `
-      <div class="card-info">
-        <div class="card-title" style="color:#c62828;">Registro Rejeitado</div>
-        <div class="card-meta">Valor: R$ ${Number(item.valor).toFixed(2)} | Tipo: ${item.tipoMovimentacao}</div>
-        <div class="card-date">Modificado em: ${dataFormatada}</div>
-      </div>
-    `;
-    container.appendChild(card);
-  });
 
-  atualizarSaldoGeral(movimentacoes);
-}
-
-// AÇÃO DE APROVAR OU REJEITAR
-async function alterarStatusMovimentacao(id, novoStatus) {
-  try {
-    // RECOMENDAÇÃO: Ajuste esta URL para bater com o método de atualizar status que você criar no back-end
-    let urlEndpoint = `${API_BASE_URL}/movimentacoes/${id}/status?status=${novoStatus}`;
-    
-    const response = await fetch(urlEndpoint, {
-      method: 'PATCH', // Geralmente usa-se PATCH ou PUT para atualizações parciais
-      headers: getAuthHeaders({ 'Content-Type': 'application/json' })
-    });
-
-    if (!response.ok) throw new Error('Não foi possível processar a ação no servidor.');
-
-    alert(`Movimentação atualizada para ${novoStatus} com sucesso!`);
-    renderNotificacoes();
-  } catch (error) {
-    console.error(error);
-    alert('Erro ao atualizar status no servidor. Verifique o mapeamento da rota no back-end.');
-  }
-}
-
-// CALCULAR E ATUALIZAR SALDO DINAMICAMENTE
-function atualizarSaldoGeral(movimentacoes) {
-  const saldoElement = document.querySelector('.saldo');
-  if (!saldoElement) return;
-
-  let saldo = 0;
-  movimentacoes.forEach(item => {
-    if (item.status && item.status.toLowerCase() === 'aprovado') {
-      if (item.tipoMovimentacao && item.tipoMovimentacao.toLowerCase() === 'doacao') {
-        saldo += Number(item.valor);
-      } else if (item.tipoMovimentacao && item.tipoMovimentacao.toLowerCase() === 'gasto') {
-        saldo -= Number(item.valor);
-      }
-    }
-  });
-
-  saldoElement.textContent = `Saldo atual: R$ ${saldo.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-}
-
-// FILTRAR HISTÓRICO (Botões da tela)
-function filtrarHistorico(tipo) {
-  const botoes = document.querySelectorAll('.filters .filter-btn');
-  botoes.forEach(btn => {
-    if (btn.textContent.trim().includes(tipo) || (tipo === 'Todos' && btn.textContent.trim() === 'Todos')) {
-      btn.classList.add('active');
-    } else {
-      btn.classList.remove('active');
-    }
-  });
-  
-  renderHistorico(tipo);
-}
-
-// INICIALIZADOR AUTOMÁTICO DE ACORDO COM A PÁGINA ABERTA
-document.addEventListener('DOMContentLoaded', () => {
-  // Configura os botões de categoria na página de registrar gastos
-  const botoesFiltro = document.querySelectorAll('.card .filters .filter-btn');
-  botoesFiltro.forEach(btn => {
-    btn.addEventListener('click', function() {
-      botoesFiltro.forEach(b => b.classList.remove('active'));
-      this.classList.add('active');
-    });
-  });
-
-  // Proteção: se não estiver logado e não estiver na login.html, vai ser redirecionado pelo getAuthHeaders
-  if (!localStorage.getItem('token') && !window.location.href.includes('login.html')) {
-    window.location.href = 'login.html';
+  if(rejeitados.length === 0) {
+    container.innerHTML = `<div class="card"><p>Nenhum registro rejeitado.</p></div>`;
     return;
   }
 
-  // Identifica a página ativa pelo ID do elemento container e popula com os dados reais
+  // Também invertendo para ver o mais recente excluído no topo
+  rejeitados.slice().reverse().forEach(gasto => {
+
+  const dataProc = gasto.dataProcessamento || gasto.data;
+
+  container.innerHTML += `
+    <div class="card card-gasto">
+
+      <div class="gasto-info">
+        <div class="valor" style="color: #ef3d3d">
+          - R$ ${parseFloat(gasto.valor).toFixed(2)}
+        </div>
+
+        <div class="data">
+          <strong>Criado em:</strong> ${gasto.data}
+          <span class="badge badge-red">Rejeitado</span>
+        </div>
+
+        <p><strong>Categoria:</strong> ${gasto.categoria || 'Não definida'}</p>
+        <p style="margin-top: 5px; color: #555;">
+          ${gasto.descricao || 'Registro removido do histórico'}
+        </p>
+
+        <div class="actions">
+          <button class="btn btn-cyan" onclick="verificarNovamente(${gasto.id})">
+            Restaurar (Verificar)
+          </button>
+
+          <button class="btn btn-red" onclick="excluirRejeitado(${gasto.id})">
+            Excluir Permanentemente
+          </button>
+        </div>
+      </div>
+
+      <div class="gasto-retorno">
+
+        <div class="status-timeline">
+          <span class="status-label">Rejeitado em:</span>
+          <span class="status-data">${dataProc}</span>
+        </div>
+
+        <div class="gasto-comprovante">
+          <a href="${gasto.comprovante || '#'}"
+             target="_blank"
+             class="btn-comprovante"
+             ${!gasto.comprovante ? 'style="opacity: 0.5; pointer-events: none;" title="Sem comprovante"' : ''}>
+
+            <svg width="16" height="16" viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+              stroke-linecap="round"
+              stroke-linejoin="round">
+
+              <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path>
+              <polyline points="14 2 14 8 20 8"></polyline>
+              <line x1="16" y1="13" x2="8" y2="13"></line>
+              <line x1="16" y1="17" x2="8" y2="17"></line>
+
+            </svg>
+
+            Comprovante
+          </a>
+        </div>
+
+      </div>
+
+    </div>
+  `;
+});
+}
+
+// VERIFICAR NOVAMENTE
+// VERIFICAR NOVAMENTE (Restaura mantendo as propriedades originais)
+function verificarNovamente(id) {
+  // 1. Encontra o item nos rejeitados
+  const gasto = rejeitados.find(item => item.id === id);
+
+  if (gasto) {
+    // 2. Apenas removemos o status de rejeitado, mas mantemos o 'tipo' original
+    // (Se era 'gasto', continua 'gasto'. Se era 'doacao', continua 'doacao')
+    delete gasto.status; 
+
+    // 3. Devolve para a lista de notificações/pendências
+    notificacoes.push(gasto);
+
+    // 4. Remove da lista de rejeitados
+    rejeitados = rejeitados.filter(item => item.id !== id);
+
+    // 5. Salva e atualiza as telas
+    salvarDados();
+    renderRejeitados();
+    
+    if (document.getElementById('lista-notificacoes')) {
+      renderNotificacoes();
+    }
+
+    alert('O registro retornou para a aba de notificações para nova conferência.');
+  }
+}
+
+// EXCLUIR REJEITADO
+function excluirRejeitado(id) {
+  rejeitados = rejeitados.filter(item => item.id !== id);
+
+  salvarDados();
+  renderRejeitados();
+}
+
+// SALDO
+function atualizarSaldo() {
+  const saldoElements = document.querySelectorAll('.saldo');
+  let entradas = 0;
+  let saidas = 0;
+
+  historico.forEach(item => {
+    // Agora o item.tipo será 'doacao' após a aprovação corrigida acima
+    if(item.tipo === 'doacao') {
+      entradas += Number(item.valor);
+    } else {
+      saidas += Number(item.valor);
+    }
+  });
+
+  const saldoTotal = entradas - saidas;
+
+  saldoElements.forEach(el => {
+    el.innerHTML = `Saldo atual: R$ ${saldoTotal.toFixed(2)}`;
+  });
+}
+
+// FILTROS DE CATEGORIA
+const botoes = document.querySelectorAll('.filter-btn');
+
+botoes.forEach(botao => {
+  botao.addEventListener('click', () => {
+    botoes.forEach(btn => btn.classList.remove('active'));
+    botao.classList.add('active');
+  });
+});
+
+renderNotificacoes();
+renderHistorico();
+renderRejeitados();
+atualizarSaldo();
+
+//TESTES
+function gerarDoacaoMock() {
+  const nomes = ['Ana Silva', 'Carlos Souza', 'Mariana Oliveira', 'Roberto Santos'];
+  const nomeSorteado = nomes[Math.floor(Math.random() * nomes.length)];
+  const valorSorteado = (Math.random() * 500 + 10).toFixed(2);
+
+  const novaDoacao = {
+    id: Date.now(),
+    valor: valorSorteado,
+    nome: nomeSorteado,
+    tipo: 'doacao',
+    categoria: 'Doação',
+    comprovante: 'comprovante_mock.jpg',
+    // Altere esta linha abaixo:
+    data: new Date().toLocaleDateString('pt-BR') + ' às ' + new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'})
+  };
+
+  notificacoes.push(novaDoacao);
+  salvarDados();
+  
+  // Se estiver na página de notificações, atualiza a tela
   if (document.getElementById('lista-notificacoes')) {
     renderNotificacoes();
   }
-  if (document.getElementById('lista-historico')) {
-    renderHistorico('Todos');
+  
+  alert(`Nova doação de ${nomeSorteado} gerada na aba de Notificações!`);
+}
+
+function aprovarGasto(id) {
+  // Encontra a doação nas notificações
+  const gasto = notificacoes.find(item => item.id === id);
+
+  if (gasto) {
+    // Definimos explicitamente os campos necessários para o histórico
+    gasto.status = 'aprovado';
+    gasto.tipo = 'doacao';      // Essencial para o cálculo do saldo (entrada)
+    gasto.categoria = 'Doação'; // Essencial para o novo filtro de doações
+    gasto.dataProcessamento = new Date().toLocaleDateString('pt-BR') + ' às ' + new Date().toLocaleTimeString('pt-BR', {hour: '2-digit', minute:'2-digit'});
+    // Adiciona ao array de histórico
+    historico.push(gasto);
+
+    // Remove das notificações
+    notificacoes = notificacoes.filter(item => item.id !== id);
+
+    // Salva e atualiza a interface
+    salvarDados();
+    atualizarSaldo();
+    
+    // Atualiza a lista de notificações (se o usuário estiver nela)
+    renderNotificacoes();
+    
+    // Se o usuário estiver na tela de histórico, ela também precisa ser atualizada
+    if (document.getElementById('lista-historico')) {
+      renderHistorico();
+    }
+    
+    alert('Doação aprovada e enviada para o histórico!');
   }
-  if (document.getElementById('lista-rejeitados')) {
-    renderRejeitados();
-  }
-});
+}
