@@ -31,9 +31,13 @@ public class MovimentacaoController {
 
     @PostMapping(value = "/doacao", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<Doacao> criarDoacao(
-        @RequestParam("valor") BigDecimal valor,
-        @RequestPart(value = "comprovante", required = false) MultipartFile comprovante
+            @RequestParam("valor") BigDecimal valor,
+            @RequestPart(value = "comprovante", required = false) MultipartFile comprovante
     ) throws IOException {
+
+    //  System.out.println("===== ENTROU NO CRIAR DOACAO =====");
+    //  System.out.println("Valor: " + valor);
+
         Doacao doacaoSalva = movimentacaoService.cadastrarDoacao(valor, comprovante);
         return ResponseEntity.status(HttpStatus.CREATED).body(doacaoSalva);
     }

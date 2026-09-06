@@ -3,6 +3,8 @@ package com.institutoluzdelo.api.security;
 import com.institutoluzdelo.api.config.RateLimitFilter;
 import java.util.Arrays;
 import java.util.List;
+
+import jakarta.servlet.DispatcherType;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -32,22 +34,21 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
-        http
-            .cors(cors -> cors.configurationSource(corsConfigurationSource()))
-            .csrf(csrf -> csrf.disable())
-            .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
-            .addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
-            .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
-            .authorizeHttpRequests(auth ->
-                auth
-                    .requestMatchers(HttpMethod.POST, "/api/movimentacoes/doacao")
-                    .permitAll()
-                    .requestMatchers(HttpMethod.POST, "/api/login")
-                    .permitAll()
-                    .anyRequest()
-                    .authenticated()
-            );
-
+      http
+          .cors(cors -> cors.configurationSource(corsConfigurationSource()))
+          .csrf(csrf -> csrf.disable())
+          .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
+          //.addFilterBefore(rateLimitFilter, UsernamePasswordAuthenticationFilter.class)
+          .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class)
+          .authorizeHttpRequests(auth ->
+              auth
+                  .requestMatchers(HttpMethod.POST, "/api/movimentacoes/doacao")
+                  .permitAll()
+                  .requestMatchers(HttpMethod.POST, "/api/login")
+                  .permitAll()
+                  .anyRequest()
+                  .authenticated()
+          );
         return http.build();
     }
 

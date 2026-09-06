@@ -34,21 +34,24 @@ public class MovimentacaoService {
     private CloudinaryService cloudinaryService;
 
 
-    // Método seguro para buscar o gestor
-    private Gestor getGestorLogado() {
-        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
-        if (auth != null && auth.getPrincipal() instanceof Gestor) {
-            return (Gestor) auth.getPrincipal();
-        }
-        return null;
-    }
+    // Método seguro para buscar o gestor !!!
+    //private Gestor getGestorLogado() {
+    //    Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+    //    if (auth != null && auth.getPrincipal() instanceof Gestor) {
+    //        return (Gestor) auth.getPrincipal();
+    //    }
+    //    return null;
+    //}
 
     //Autenticação de gestor (ele precisa estar logado para que funcione)
     //private Gestor getGestorLogado() {
     //    return (Gestor) SecurityContextHolder.getContext().getAuthentication().getPrincipal();
     //}
 
-    //agora, todo movimento inserido será relacionado ao gestor de id 1. O problema está na autenticação, pois funcionou quando retirei ela kkkkk
+    //agora, todo movimento inserido será relacionado ao gestor de id 1. Eu não tenho a autenticação (não lembro como funciona), funcionou quando retirei ela kkkkk
+    // IMPORTANTE: para reativar a autenticação, basta descomentar os outros getGestorLogado (ou o que tem !!!).
+    //-- Para doações, o BD está marcado que o gestor NÃO pode ser nulo, e por conta disso, ele tenta enviar a as
+    //-- credenciais para o BD, mas não consegue
     private Gestor getGestorLogado() {
         return gestorRepository.findById(1L)
                 .orElseThrow(() -> new RuntimeException("Gestor de teste não encontrado"));
